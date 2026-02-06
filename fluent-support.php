@@ -17,10 +17,7 @@ define('FLUENT_SUPPORT_UPLOAD_DIR', 'fluent-support');
 define('FLUENT_SUPPORT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('FLUENT_SUPPORT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
-define('FLUENT_SUPPORT_PRO_PLUGIN_PATH', FLUENT_SUPPORT_PLUGIN_PATH . 'pro/');
-define('FLUENT_SUPPORT_PRO_PLUGIN_URL', FLUENT_SUPPORT_PLUGIN_URL . 'pro/');
-
-require_once FLUENT_SUPPORT_PRO_PLUGIN_PATH . 'fluent-support-pro.php';
+require_once FLUENT_SUPPORT_PLUGIN_PATH . 'pro/loader.php';
 
 require __DIR__ . '/vendor/autoload.php';
 
