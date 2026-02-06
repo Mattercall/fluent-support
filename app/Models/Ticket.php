@@ -1168,7 +1168,7 @@ class Ticket extends Model
     private function getTicketAdditionalData($agent, $responses, $ticket, $isCrmProfileRequested = false)
     {
         foreach ($responses as $response) {
-            $response->content = links_add_target(make_clickable(wpautop($response->content, false)));
+            $response->content = $this->formatTicketContentForView($response->content);
             if (!empty($response->ccinfo)) {
                 $val = Helper::safeUnserialize($response->ccinfo->value);
                 if(isset($val['cc_email']) && !empty($val['cc_email'])){
@@ -1181,7 +1181,7 @@ class Ticket extends Model
             }
         }
 
-        $ticket->content = links_add_target(make_clickable(wpautop($ticket->content, false)));
+        $ticket->content = $this->formatTicketContentForView($ticket->content);
 
         //Get last activity by agent
         $ticket->live_activity = TicketHelper::getActivity($ticket->id, $agent->id);
@@ -1210,6 +1210,29 @@ class Ticket extends Model
 
         return $data;
 
+    }
+
+    /**
+     * This formats ticket body content for safe and performant rendering.
+     *
+     * For unusually long payloads we skip `make_clickable()` because it can
+     * cause expensive regex processing and lock up the admin UI.
+     *
+     * @param string $content
+     * @return string
+     */
+    private function formatTicketContentForView($content)
+    {
+        $content = (string) $content;
+
+        // 500KB default threshold; configurable for edge-cases.
+        $maxClickableBytes = (int) apply_filters('fluent_support/max_clickable_content_bytes', 500000);
+
+        if ($maxClickableBytes > 0 && strlen($content) > $maxClickableBytes) {
+            return wpautop($content, false);
+        }
+
+        return links_add_target(make_clickable(wpautop($content, false)));
     }
 
 
@@ -1712,4 +1735,3 @@ class Ticket extends Model
     }
 
 }
-
