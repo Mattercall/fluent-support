@@ -18,16 +18,12 @@ if (defined('FLUENT_SUPPORT_PRO_DIR_FILE')) {
 
 define('FLUENT_SUPPORT_PRO_DIR_FILE', __FILE__);
 
-add_filter('pre_http_request', function($pre, $args, $url) {
-    if (strpos($url, 'fluentapi.wpmanageninja.com') !== false && strpos($url, 'fluent-cart') !== false) {
-        return ['body' => json_encode(['status' => 'valid', 'variation_id' => '1', 'variation_title' => 'Pro', 'expiration_date' => date('Y-m-d', strtotime('+10 years')), 'activation_hash' => md5('B5E0B5F8DD8689E6ACA49DD6E6E1A930')]), 'response' => ['code' => 200]];
-    }
-    return $pre;
-}, 10, 3);
+if (defined('FLUENT_SUPPORT_UNIFIED_BOOTSTRAP')) {
+    // Unified runtime is responsible for loading Pro module.
+    return;
+}
 
-update_option('__fluentsupport_pro_license', ['license_key' => 'B5E0B5F8DD8689E6ACA49DD6E6E1A930', 'status' => 'valid', 'variation_id' => '1', 'variation_title' => 'Pro', 'expires' => date('Y-m-d', strtotime('+10 years')), 'activation_hash' => md5('B5E0B5F8DD8689E6ACA49DD6E6E1A930')], false);
-
-require_once("fluent-support-pro-boot.php");
+require_once 'fluent-support-pro-boot.php';
 
 add_action('plugins_loaded', function () {
     add_action('init', function () {
@@ -51,15 +47,13 @@ add_action('fluent_support_loaded', function ($app) {
 });
 
 register_activation_hook(
-    __FILE__, array('FluentSupportPro\Database\DBMigrator', 'run')
+    __FILE__, array('FluentSupportPro\\Database\\DBMigrator', 'run')
 );
 
-// Handle Network new Site Activation
-add_action('wp_insert_site', function ($new_site) {
+add_action('wp_insert_site', function ($newSite) {
     if (is_plugin_active_for_network('fluent-support-pro/fluent-support-pro.php')) {
-        switch_to_blog($new_site->blog_id);
+        switch_to_blog($newSite->blog_id);
         \FluentSupportPro\Database\DBMigrator::run(false);
         restore_current_blog();
     }
 });
-
