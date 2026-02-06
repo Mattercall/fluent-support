@@ -58,10 +58,10 @@ class BlockEditorHandler
         }
 
         if ($selectedMailbox = Arr::get($attributes, 'selectedMailbox')) {
-            $param .= " business_box_id='" . esc_attr($selectedMailbox) . "'";
+            $param .= " business_box_id='{$selectedMailbox}'";
         }
 
-        $param .= " attributes='" . esc_attr( base64_encode( wp_json_encode( $attributes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ) ) . "'";
+        $param .= " attributes='" . json_encode($attributes) . "'";
 
         return do_shortcode("[fluent_support_portal $param]");
     }

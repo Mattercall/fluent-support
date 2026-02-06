@@ -62,7 +62,7 @@ class WPException extends Exception {
 
 	/**
 	 * Retrive the full formatted error messages.
-	 * @return array
+	 * @return [type] [description]
 	 */
 	protected function toArray()
 	{

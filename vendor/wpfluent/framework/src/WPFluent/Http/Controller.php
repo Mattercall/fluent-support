@@ -17,13 +17,13 @@ abstract class Controller
 
     /**
      * Request Instane
-     * @var \FluentSupport\Framework\Http\Request\Request
+     * @var \FluentSupport\Framework\Request\Request
      */
     protected $request = null;
 
     /**
      * Response Instane
-     * @var \FluentSupport\Framework\Http\Response\Response
+     * @var \FluentSupport\Framework\Response\Response
      */
     protected $response = null;
 
@@ -36,9 +36,9 @@ abstract class Controller
     /**
      * Construct the controller instance
      */
-    public function __construct($app = null)
+    public function __construct()
     {
-        $this->app = $app ?: App::getInstance();
+        $this->app = App::getInstance();
         $this->request = $this->app['request'];
         $this->response = $this->app['response'];
     }
@@ -53,7 +53,6 @@ abstract class Controller
     public function validate($data, $rules, $messages = [])
     {
         try {
-            // @phpstan-ignore-next-line
             $validator = $this->app->validator->make($data, $rules, $messages);
 
             if ($validator->validate()->fails()) {
@@ -120,9 +119,9 @@ abstract class Controller
     }
 
     /**
-     * Send a success json response.
-     * 
+     * Send a success json response
      * @param  array  $data
+     * @param  integer $code
      * @return \WP_REST_Response
      */
     public function sendSuccess($data = [])

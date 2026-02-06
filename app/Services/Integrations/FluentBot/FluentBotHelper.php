@@ -4,7 +4,6 @@ namespace FluentSupport\App\Services\Integrations\FluentBot;
 use FluentSupport\App\Models\Meta;
 use FluentSupport\App\Services\Integrations\FluentBot\FluentBotAPI;
 use FluentSupport\Framework\Support\Arr;
-use FluentSupport\App\Services\Helper;
 use WP_Error;
 class FluentBotHelper
 {
@@ -130,7 +129,7 @@ class FluentBotHelper
             'key'         => '_fs_fluent_bot_config'
         ])->first();
 
-        $config = $meta ? Helper::safeUnserialize($meta->value) : [];
+        $config = $meta ? unserialize($meta->value) : [];
 
         $apiKey = $config['generalApiKey'] ?? '';
         $botId = $config['generalBotId'] ?? '';

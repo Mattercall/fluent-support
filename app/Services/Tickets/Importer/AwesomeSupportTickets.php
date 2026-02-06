@@ -68,7 +68,7 @@ class AwesomeSupportTickets extends BaseImporter
         ];
 
         if (!$hasMore) {
-            $response['message'] = __('All tickets have been imported successfully', 'fluent-support');
+            $response['message'] = __('All tickets has been importer successfully', 'fluent-support');
             update_option('_fs_migrate_awesome_support', current_time('mysql'), 'no');
         }
 
@@ -249,7 +249,7 @@ class AwesomeSupportTickets extends BaseImporter
         ];
 
         if (!$hasmore) {
-            $response['message'] = __('All tickets have been deleted successfully', 'fluent-support');
+            $response['message'] = __('All tickets has been deleted successfully', 'fluent-support');
         }
 
         return $response;

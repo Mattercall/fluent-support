@@ -317,7 +317,7 @@ class Reporting
             }
         }
 
-        $agents = Agent::select(['id', 'first_name', 'last_name', 'email'])
+        $agents = Agent::select(['id', 'first_name', 'last_name'])
             ->whereIn('id', $agentIds)
             ->get();
 
@@ -588,11 +588,9 @@ class Reporting
         $whereClause = '';
         if ($from && $to) {
             // Ensure the dates are in the correct format (Y-m-d H:i:s)
-            $start_date = gmdate('Y-m-d 00:00:00', strtotime($from));
-            $end_date = gmdate('Y-m-d 23:59:59', strtotime($to));
-            $escapedStartDate = esc_sql($start_date);
-            $escapedEndDate = esc_sql($end_date);
-            $whereClause = "WHERE created_at BETWEEN '$escapedStartDate' AND '$escapedEndDate'";
+            $start_date = date('Y-m-d 00:00:00', strtotime($from));
+            $end_date = date('Y-m-d 23:59:59', strtotime($to));
+            $whereClause = "WHERE created_at BETWEEN '$start_date' AND '$end_date'";
         }
 
         global $wpdb;
@@ -641,23 +639,17 @@ class Reporting
 
         global $wpdb;
 
-        // Escape reportType
-        $escapedReportType = esc_sql($reportType);
-        $whereClause = " AND p.person_type = '" . $escapedReportType . "'";
+        $whereClause = " AND p.person_type = '" . $reportType . "'";
 
         if ($from && $to) {
             // Ensure the dates are in the correct format (Y-m-d H:i:s)
-            $start_date = gmdate('Y-m-d 00:00:00', strtotime($from));
-            $end_date = gmdate('Y-m-d 23:59:59', strtotime($to));
-            $escapedStartDate = esc_sql($start_date);
-            $escapedEndDate = esc_sql($end_date);
-            $whereClause .= " AND c.created_at BETWEEN '$escapedStartDate' AND '$escapedEndDate'";
+            $start_date = date('Y-m-d 00:00:00', strtotime($from));
+            $end_date = date('Y-m-d 23:59:59', strtotime($to));
+            $whereClause .= " AND c.created_at BETWEEN '$start_date' AND '$end_date'";
         }
 
         if ($agentId) {
-            // Use intval to ensure agentId is an integer and safe
-            $safeAgentId = intval($agentId);
-            $whereClause .= " AND c.person_id = $safeAgentId";
+            $whereClause .= " AND c.person_id = $agentId";
         }
 
         // SQL query to count customer responses by day of week and hour within the specified date range

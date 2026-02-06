@@ -44,21 +44,8 @@ class Common
         }
 
         if (!file_exists($filePath)) {
-            $response = wp_remote_get($remoteUrl, [
-                'timeout' => 60,
-                'stream' => false
-            ]);
-
-            if (is_wp_error($response)) {
-                return false;
-            }
-
-            $file_contents = wp_remote_retrieve_body($response);
-            if (empty($file_contents)) {
-                return false;
-            }
-
-            file_put_contents($filePath, $file_contents);
+            $file = file_get_contents($remoteUrl);
+            file_put_contents($filePath, $file);
         }
 
         return $filePath;

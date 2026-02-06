@@ -2,32 +2,20 @@
 
 namespace FluentSupport\Framework\Foundation;
 
-use FluentSupport\Framework\Container\Contracts\BindingResolutionException;
-
-/**
- * @method static db();
- * @method static view();
- * @method static events();
- * @method static config();
- * @method static request();
- * @method static response();
- * @method static encrypter();
- * @method static validator();
- */
 
 class App
 {
     /**
      * Application instance
      * 
-     * @var \FluentSupport\Framework\Foundation\Application
+     * @var FluentSupport\Framework\Foundation\Application
      */
     protected static $instance = null;
 
     /**
      * Set the application instance
      * 
-     * @param \FluentSupport\Framework\Foundation\Application $app
+     * @param FluentSupport\Framework\Foundation\Application $app
      */
     public static function setInstance($app)
     {
@@ -39,7 +27,7 @@ class App
      * 
      * @param  string $module The binding/key name for a component.
      * @param  array $parameters constructor dependencies if any.
-     * @return \FluentSupport\Framework\Foundation\Application|mixed
+     * @return FluentSupport\Framework\Foundation\Application|mixed
      */
     public static function getInstance($module = null, $parameters = [])
     {
@@ -55,7 +43,7 @@ class App
      * 
      * @param  string $module The binding/key name for a component.
      * @param  array $parameters constructor dependencies if any.
-     * @return \FluentSupport\Framework\Foundation\Application|mixed
+     * @return FluentSupport\Framework\Foundation\Application|mixed
      */
     public static function make($module = null, $parameters = [])
     {
@@ -71,17 +59,6 @@ class App
      */
     public static function __callStatic($method, $params)
     {
-        if ($method === 'support') {
-            $param = array_splice($params, 0, 1);
-            return static::getInstance(
-                'Support.' . implode('.', $param), ...$params
-            );
-        }
-
-        if (method_exists(static::$instance, $method)) {
-            return static::$instance->{$method}(...$params);
-        }
-
         return static::getInstance($method, ...$params);
     }
 }

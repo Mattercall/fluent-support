@@ -5,9 +5,8 @@ namespace FluentSupport\App\Http\Controllers;
 use FluentSupport\App\Modules\Reporting\Reporting;
 use FluentSupport\App\Modules\StatModule;
 use FluentSupport\App\Services\Helper;
-use FluentSupport\Framework\Http\Request\Request;
+use FluentSupport\Framework\Request\Request;
 use FluentSupport\App\Models\Ticket;
-use FluentSupport\App\Models\Conversation;
 
 /**
  * ReportingController class for REST API
@@ -18,28 +17,6 @@ use FluentSupport\App\Models\Conversation;
  */
 class ReportingController extends Controller
 {
-    private static function getSanitizedDateRange(Request $request)
-    {
-        $dateRange = $request->get('date_range', []);
-
-        if (is_array($dateRange) && count($dateRange) >= 2) {
-            return [
-                sanitize_text_field($dateRange[0] ?? ''),
-                sanitize_text_field($dateRange[1] ?? '')
-            ];
-        }
-
-        if (is_string($dateRange)) {
-            $parts = array_map('trim', explode(',', $dateRange));
-            return [
-                sanitize_text_field($parts[0] ?? ''),
-                sanitize_text_field($parts[1] ?? '')
-            ];
-        }
-
-        return ['', ''];
-    }
-
     /**
      * getOverallReports method will return the overall statistics of all ticket by ticket statuses
      * The response will have an array with ticket number by ticket status
@@ -49,7 +26,8 @@ class ReportingController extends Controller
     public function getOverallReports(Request $request)
     {
         return [
-            'overall_reports' => StatModule::getOverAllStats()
+            'overall_reports' => StatModule::getOverAllStats(),
+            'today_reports' => StatModule::getTodayStats(),
         ];
     }
 
@@ -68,7 +46,7 @@ class ReportingController extends Controller
      */
     public function getTicketsChart(Request $request, Reporting $reporting)
     {
-        list($from, $to) = self::getSanitizedDateRange($request);
+        list($from, $to) = $request->getSafe('date_range', 'sanitize_text_field') ?: ['', ''];
 
         $filter = [
             'agent_id' => $request->getSafe('agent_id', 'intval') ?: null,
@@ -92,7 +70,7 @@ class ReportingController extends Controller
     public static function getResolveChart(Request $request, Reporting $reporting): array
     {
         $type = $request->getSafe('type', 'sanitize_text_field');
-        list($from, $to) = self::getSanitizedDateRange($request);
+        list($from, $to) = $request->getSafe('date_range', 'sanitize_text_field') ?: ['', ''];
 
         $filter = [
             'agent_id' => $request->getSafe('agent_id', 'intval') ?: null,
@@ -115,7 +93,7 @@ class ReportingController extends Controller
      */
     public function getResponseChart(Request $request, Reporting $reporting)
     {
-        list($from, $to) = self::getSanitizedDateRange($request);
+        list($from, $to) = $request->getSafe('date_range', 'sanitize_text_field') ?: ['', ''];
         $filter = [];
         $stats = $reporting->getResponseGrowth($from, $to);
 
@@ -139,7 +117,7 @@ class ReportingController extends Controller
     public function getAgentsSummary(Request $request, Reporting $reporting)
     {
         return [
-          'summary' =>  $reporting->agentSummary($request->getSafe('from', 'sanitize_text_field'), $request->getSafe('to', 'sanitize_text_field'))
+          'summary' =>  $reporting->agentSummary($request->getSafe('from'), $request->getSafe('to'))
         ];
     }
 
@@ -167,7 +145,7 @@ class ReportingController extends Controller
     public static function getResponseGrowthChart(Request $request,Reporting $reporting): array
     {
         $type = $request->getSafe('type', 'sanitize_text_field');
-        list($from, $to) = self::getSanitizedDateRange($request);
+        list($from, $to) = $request->getSafe('date_range', 'sanitize_text_field') ?: ['', ''];
 
         $filter = [
             'product_id' => $request->getSafe('product_id', 'intval') ?: null,
@@ -206,7 +184,7 @@ class ReportingController extends Controller
     public static function getMailBoxesSummary(Request $request,Reporting $reporting): array
     {
         return [
-            'summary' =>  $reporting->getSummary('mailbox',$request->getSafe('from', 'sanitize_text_field'), $request->getSafe('to', 'sanitize_text_field'))
+            'summary' =>  $reporting->getSummary('mailbox',$request->getSafe('from'), $request->getSafe('to'))
         ];
     }
 
@@ -220,7 +198,7 @@ class ReportingController extends Controller
     {
         //Get logged in agent information
         $agent =  Helper::getAgentByUserId(get_current_user_id());
-        list($from, $to) = self::getSanitizedDateRange($request);
+        list($from, $to) = $request->getSafe('date_range', 'sanitize_text_field') ?: ['', ''];
 
         return [
             'stats' => $reporting->getTicketResolveGrowth($from, $to, ['agent_id' => $agent->id])
@@ -236,7 +214,7 @@ class ReportingController extends Controller
     public function getAgentResponseChart(Request $request, Reporting $reporting)
     {
         $agent =  Helper::getAgentByUserId(get_current_user_id());
-        list($from, $to) = self::getSanitizedDateRange($request);
+        list($from, $to) = $request->getSafe('date_range', 'sanitize_text_field') ?: ['', ''];
 
         return [
             'stats' => $reporting->getResponseGrowth($from, $to, ['person_id' => $agent->id])
@@ -261,7 +239,7 @@ class ReportingController extends Controller
 
     public function dayTimeStats(Reporting $reporting, Request $request)
     {
-        list($from, $to) = self::getSanitizedDateRange($request);
+        list($from, $to) = $request->getSafe('date_range', 'sanitize_text_field') ?: ['', ''];
 
         $filter = [
             'report_type' => $request->getSafe('report_type', 'sanitize_text_field') ?: null,
@@ -278,7 +256,7 @@ class ReportingController extends Controller
     public function ticketResponseStats(Reporting $reporting, Request $request)
     {
 
-        list($from, $to) = self::getSanitizedDateRange($request);
+        list($from, $to) = $request->getSafe('date_range', 'sanitize_text_field') ?: ['', ''];
 
         $filter = [
             'person_type' => $request->getSafe('person_type', 'sanitize_text_field') ?: null,
@@ -286,120 +264,6 @@ class ReportingController extends Controller
         ];
 
         return $reporting->getTicketResponseStats($from, $to, $filter);
-    }
-
-    /**
-     * getStats method will return statistics similar to getOverallReports but with filters
-     * Returns: New Tickets, Active Tickets, Closed Tickets, and Responses
-     * Filters: date_range, mailbox_id (business_box), product_id, agent_id, customer_id
-     * @param Request $request
-     * @return array
-     */
-    public function getStats(Request $request)
-    {
-        list($from, $to) = self::getSanitizedDateRange($request);
-
-        $filters = [
-            'mailbox_id' => $request->getSafe('mailbox_id', 'intval') ?: $request->getSafe('business_box', 'intval'),
-            'product_id' => $request->getSafe('product_id', 'intval'),
-            'agent_id' => $request->getSafe('agent_id', 'intval'),
-            'customer_id' => $request->getSafe('customer_id', 'intval'),
-        ];
-
-        $baseQuery = Ticket::query();
-        foreach ($filters as $field => $value) {
-            if ($value) {
-                $baseQuery->where($field, $value);
-            }
-        }
-
-        $applyDateRange = function($query, $dateField = 'created_at') use ($from, $to) {
-            if ($from && $to) {
-                $query->whereBetween($dateField, ["$from 00:00:00", "$to 23:59:59"]);
-            } elseif ($from) {
-                $query->where($dateField, '>=', "$from 00:00:00");
-            } elseif ($to) {
-                $query->where($dateField, '<=', "$to 23:59:59");
-            }
-        };
-
-        $countTickets = function($status, $dateField = 'created_at') use ($baseQuery, $applyDateRange) {
-            $query = clone $baseQuery;
-            $query->where('status', $status);
-            $applyDateRange($query, $dateField);
-            return $query->count();
-        };
-
-        $newTickets = $countTickets('new');
-        $closedTickets = $countTickets('closed');
-
-        $openQuery = clone $baseQuery;
-        $openQuery->where('status', '!=', 'closed');
-        $applyDateRange($openQuery);
-        $openTickets = $openQuery->count();
-
-        $responsesQuery = Conversation::query()->where('conversation_type', 'response');
-
-        if (array_filter($filters)) {
-            $responsesQuery->whereHas('ticket', function ($q) use ($filters) {
-                foreach ($filters as $field => $value) {
-                    if ($value) {
-                        $q->where($field, $value);
-                    }
-                }
-            });
-        }
-
-        $applyDateRange($responsesQuery, 'created_at');
-        $responses = $responsesQuery->count();
-
-        $agentId = $filters['agent_id'];
-
-        if ($agentId) {
-            $repliesQuery = Conversation::query()
-                ->where('person_id', $agentId);
-
-            $applyDateRange($repliesQuery, 'created_at');
-            $totalReplies = $repliesQuery->count();
-
-            $stats = [
-                'total_replies' => $totalReplies,
-                'new_tickets' => $newTickets,
-                'closed_tickets' => $closedTickets,
-                'responses' => $responses,
-                'open_tickets' => $openTickets,
-            ];
-        } else {
-            $activeTickets = $countTickets('active');
-
-            $stats = [
-                'new_tickets' => $newTickets,
-                'active_tickets' => $activeTickets,
-                'closed_tickets' => $closedTickets,
-                'responses' => $responses,
-                'open_tickets' => $openTickets,
-            ];
-        }
-
-        $labels = [
-            'total_replies'  => __('Total Replies', 'fluent-support'),
-            'new_tickets'    => __('New Tickets', 'fluent-support'),
-            'active_tickets' => __('Active Tickets', 'fluent-support'),
-            'closed_tickets' => __('Closed Tickets', 'fluent-support'),
-            'responses'      => __('Responses', 'fluent-support'),
-            'open_tickets'   => __('Open Tickets', 'fluent-support'),
-        ];
-
-        $overallReports = [];
-        foreach ($stats as $key => $count) {
-            $overallReports[$key] = [
-                'title' => $labels[$key] ?? ucwords(str_replace('_', ' ', (string) $key)),
-                'key' => $key,
-                'count' => $count,
-            ];
-        }
-
-        return ['overall_reports' => $overallReports];
     }
 
 }

@@ -3,7 +3,6 @@
 namespace FluentSupport\App\Hooks\Handlers;
 
 use FluentSupport\App\Models\Activity;
-use FluentSupport\App\Services\Helper;
 
 /**
  *  ActivityLogger class for Hooks
@@ -21,11 +20,6 @@ class ActivityLogger
      */
     public function init()
     {
-        // Check if activity logs are disabled - if so, don't register any hooks
-        if (Helper::areLogsDisabled('_activity_settings')) {
-            return;
-        }
-
         // Ticket Related activities
         add_action('fluent_support/ticket_created', function ($ticket, $customer) {
 
@@ -183,7 +177,6 @@ class ActivityLogger
     public function getTicketMarkup($ticket, $ticketText = false)
     {
         if (!$ticketText) {
-            // translators: %s is the ticket title
             $ticketText = sprintf(__('Ticket: %s', 'fluent-support'), $ticket->title);
         }
 

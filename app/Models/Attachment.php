@@ -34,7 +34,7 @@ class Attachment extends Model
     public static function boot()
     {
         parent::boot();
-
+        
         static::creating(function ($model) {
             $uid = wp_generate_uuid4();
             $model->file_hash = md5($uid . wp_rand(0, 1000));
@@ -59,7 +59,7 @@ class Attachment extends Model
     {
         return add_query_arg([
             'fst_file'    => $this->file_hash,
-            'secure_sign' => md5($this->id . gmdate('YmdH'))
+            'secure_sign' => md5($this->id . date('YmdH'))
         ], site_url('/index.php'));
     }
 }

@@ -143,9 +143,9 @@ class HelpScoutTickets extends BaseImporter
                 }
 
 
-                $waitingTime = $response['customerWaitingSince']['time'] ?? $response['createdAt'] ?? null;
-                $waitingSince = $waitingTime ? gmdate('Y-m-d h:i:s', strtotime($waitingTime)) : null;
-                $createdAt = $response['createdAt'] ?? null;
+                $waitingSince = isset($response['customerWaitingSince']['time']) ?
+                    date('Y-m-d h:i:s', strtotime($response['customerWaitingSince']['time'])) :
+                    date('Y-m-d h:i:s', strtotime($response['createdAt']));
 
                 $ticketData = [
                     'origin_id'              => $this->originId,
@@ -154,8 +154,8 @@ class HelpScoutTickets extends BaseImporter
                     'content'                => $content,
                     'customer'               => $customer,
                     'response_count'         => intval($response['threads']),
-                    'created_at'             => $createdAt ? gmdate('Y-m-d h:i:s', strtotime($createdAt)) : null,
-                    'updated_at'             => $createdAt ? gmdate('Y-m-d h:i:s', strtotime($createdAt)) : null,
+                    'created_at'             => date('Y-m-d h:i:s', strtotime($response['createdAt'])),
+                    'updated_at'             => date('Y-m-d h:i:s', strtotime($response['createdAt'])),
                     'waiting_since'          => $waitingSince,
                     'last_customer_response' => NULL,
                     'last_agent_response'    => NULL,
@@ -180,13 +180,12 @@ class HelpScoutTickets extends BaseImporter
                     $repliedBy = $reply['createdBy'] ?? [];
                     $isLineItem = $reply['type'] == 'lineitem';
                     $user = ($customer->email === ($repliedBy['email'] ?? null)) ? $customer : $this->fetchPerson($this->formatPersonData($repliedBy), 'agent');
-                    $replyCreatedAt = $reply['createdAt'] ?? null;
 
                     $formattedReplies[] = [
                         'content' => $isLineItem ? wp_kses_post($reply['action']['text']) : wp_kses_post($reply['body']),
                         'conversation_type' => $isLineItem ? 'internal_info' : 'response',
-                        'created_at' => $replyCreatedAt ? gmdate('Y-m-d H:i:s', strtotime($replyCreatedAt)) : null,
-                        'updated_at' => $replyCreatedAt ? gmdate('Y-m-d H:i:s', strtotime($replyCreatedAt)) : null,
+                        'created_at' => date('Y-m-d H:i:s', strtotime($reply['createdAt'])),
+                        'updated_at' => date('Y-m-d H:i:s', strtotime($reply['createdAt'])),
                         'is_customer_reply' => $isLineItem ? false : ($customer->email === $repliedBy['email']),
                         'user' => $user,
                         'attachments' => $this->download($reply['_embedded']['attachments']),
@@ -236,7 +235,7 @@ class HelpScoutTickets extends BaseImporter
     {
         $formattedAttachments = [];
 
-        if (empty($attachments) || !is_array($attachments) || count($attachments) < 1) {
+        if (count($attachments) < 1) {
             return $formattedAttachments;
         }
 
@@ -293,21 +292,8 @@ class HelpScoutTickets extends BaseImporter
         }
 
         if (!file_exists($filePath)) {
-            $response = wp_remote_get($remoteUrl, [
-                'timeout' => 60,
-                'stream' => false
-            ]);
-
-            if (is_wp_error($response)) {
-                return false;
-            }
-
-            $file_contents = wp_remote_retrieve_body($response);
-            if (empty($file_contents)) {
-                return false;
-            }
-
-            file_put_contents($filePath, $file_contents);
+            $file = file_get_contents($remoteUrl);
+            file_put_contents($filePath, $file);
         }
 
         return $filePath;

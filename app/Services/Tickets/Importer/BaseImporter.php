@@ -44,7 +44,7 @@ abstract class BaseImporter
 
     /**
      * This method `deleteTickets` delete tickets and related data from targeted helpdesk once the
-     * migration process done successfully
+     * migration process done succesfully
      *
      * @param int $page // this will be migrated ticket page number
      * @return array
@@ -104,7 +104,7 @@ abstract class BaseImporter
             $data['agent_id'] = $ticketData['agent']['id'];
         }
 
-        if (empty($ticketData['mailbox_id']) && $this->mailbox) {
+        if (empty($ticketData['mailbox_id'])) {
             $data['mailbox_id'] = $this->mailbox->id;
         }
 
@@ -177,20 +177,18 @@ abstract class BaseImporter
             }
 
             if ($reply['is_customer_reply']) {
-                $replyCreatedAt = $replyData['created_at'] ?? null;
-                if (strtotime($lastCustomerResponseTime) < strtotime($replyCreatedAt)) {
-                    $lastCustomerResponseTime = $replyCreatedAt;
+                if (strtotime($lastCustomerResponseTime) < strtotime($replyData['created_at'])) {
+                    $lastCustomerResponseTime = $replyData['created_at'];
                 }
             } else if ($replyData['conversation_type'] == 'response') {
-                $replyCreatedAt = $replyData['created_at'] ?? null;
 
-                if (!$firstResponseTimestamp && $replyCreatedAt) {
-                    $firstResponseTimestamp = $replyCreatedAt;
+                if (!$firstResponseTimestamp) {
+                    $firstResponseTimestamp = $replyData['created_at'];
                 }
 
-                if (strtotime($lastAgentResponseTime) < strtotime($replyCreatedAt)) {
-                    $lastAgentResponseTime = $replyCreatedAt;
-                    $waitingSince = $replyCreatedAt;
+                if (strtotime($lastAgentResponseTime) < strtotime($replyData['created_at'])) {
+                    $lastAgentResponseTime = $replyData['created_at'];
+                    $waitingSince = $replyData['created_at'];
                 }
 
                 $defualtAgentId  = $person->id;
@@ -219,11 +217,11 @@ abstract class BaseImporter
             $ticketUpdateData['agent_id'] = $defualtAgentId;
         }
 
-        if ($firstResponseTimestamp && !empty($createdTicket->crerated_at)) {
+        if ($firstResponseTimestamp && $createdTicket->crerated_at) {
             $ticketUpdateData['first_response_time'] = strtotime($firstResponseTimestamp) - strtotime($createdTicket->crerated_at);
         }
 
-        if ($createdTicket->status == 'closed' && !empty($createdTicket->resolved_at) && !empty($createdTicket->crerated_at)) {
+        if ($createdTicket->status == 'closed' && $createdTicket->resolved_at && $createdTicket->crerated_at) {
             $ticketUpdateData['total_close_time'] = strtotime($createdTicket->resolved_at) - strtotime($createdTicket->crerated_at);
         }
 
@@ -368,7 +366,7 @@ abstract class BaseImporter
             $ticketData['slug'] = Ticket::slugify($ticketData['title']);
         }
 
-        $ticketData['hash'] = substr(md5(time() . wp_generate_uuid4()), 0, 8) . wp_rand(1, 99);
+        $ticketData['hash'] = substr(md5(time() . wp_generate_uuid4()), 0, 8) . mt_rand(1, 99);
 
         $ticketData['content_hash'] = md5($ticketData['content']);
 

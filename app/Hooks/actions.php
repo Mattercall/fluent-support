@@ -1,7 +1,5 @@
 <?php
 
-defined('ABSPATH') or die;
-
 /**
  * @var $app FluentSupport\Framework\Foundation\Application
  */
@@ -30,6 +28,9 @@ add_action('init', function () {
 
 //AI Activities
 (new \FluentSupport\App\Hooks\Handlers\AIActivityLogger())->init();
+
+// Admin UI enhancements
+(new \FluentSupport\App\Hooks\Handlers\AdminStylingHandler())->init();
 
 /*
  * Email Notification Hooks
@@ -78,7 +79,7 @@ $app->addAction('wp_ajax_fs_export_agent_report', 'FluentSupport\App\Hooks\Handl
 // LiteSpeed Cache ESI mode enabled issue fixed
 if(defined('LSCWP_V')){
     add_action('litespeed_init', function (){
-        if(isset($_SERVER['REQUEST_URI']) && strpos(esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])), 'fluent-support') !== false){
+        if(isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], 'fluent-support') !== false){
             defined( 'LITESPEED_ESI_OFF' ) || define( 'LITESPEED_ESI_OFF', true );
         }
     });

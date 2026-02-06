@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fluent Support
  * Description: The Ultimate Support Plugin For Your WordPress.
- * Version: 2.0.1
+ * Version: 1.10.0
  * Author: WPManageNinja LLC
  * Author URI: https://wpmanageninja.com
  * Plugin URI: https://fluentsupport.com
@@ -11,15 +11,14 @@
  * Domain Path: /language
 */
 
-define('FLUENT_SUPPORT_VERSION', '2.0.1');
-define('FLUENT_SUPPORT_PRO_MIN_VERSION', '2.0.1');
+define('FLUENT_SUPPORT_VERSION', '1.10.0');
+define('FLUENT_SUPPORT_PRO_MIN_VERSION', '1.10.0');
 define('FLUENT_SUPPORT_UPLOAD_DIR', 'fluent-support');
 define('FLUENT_SUPPORT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('FLUENT_SUPPORT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
-require_once FLUENT_SUPPORT_PLUGIN_PATH . 'pro/loader.php';
-
 require __DIR__ . '/vendor/autoload.php';
+require __DIR__ . '/pro/loader.php';
 
 call_user_func(function ($bootstrap) {
     $bootstrap(__FILE__);
@@ -30,16 +29,6 @@ add_action('wp_insert_site', function ($new_site) {
     if (is_plugin_active_for_network('fluent-support/fluent-support.php')) {
         switch_to_blog($new_site->blog_id);
         (new \FluentSupport\App\Hooks\Handlers\ActivationHandler)->handle(false);
-        restore_current_blog();
-    }
-});
-
-register_activation_hook(__FILE__, array('FluentSupportPro\Database\DBMigrator', 'run'));
-
-add_action('wp_insert_site', function ($new_site) {
-    if (is_plugin_active_for_network('fluent-support/fluent-support.php')) {
-        switch_to_blog($new_site->blog_id);
-        \FluentSupportPro\Database\DBMigrator::run(false);
         restore_current_blog();
     }
 });

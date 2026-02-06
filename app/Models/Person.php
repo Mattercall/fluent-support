@@ -65,7 +65,7 @@ class Person extends Model
         $query->where(function ($query) use ($fields, $search) {
             $query->where(array_shift($fields), 'LIKE', "%$search%");
 
-            $nameArray = explode(' ', (string) $search);
+            $nameArray = explode(' ', $search);
             if (count($nameArray) >= 2) {
                 $query->orWhere(function ($q) use ($nameArray) {
                     $fname = array_shift($nameArray);
@@ -122,7 +122,7 @@ class Person extends Model
             $fallBackName .= '+' . $this->attributes['last_name'];
         }
 
-        $hash = md5(strtolower(trim($this->attributes['email'] ?? '')));
+        $hash = md5(strtolower(trim($this->attributes['email'])));
 
         $fallback = '';
         if ($fallBackName) {

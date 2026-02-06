@@ -2,7 +2,6 @@
 
 namespace FluentSupport\Framework\Database;
 
-use InvalidArgumentException;
 use FluentSupport\Framework\Foundation\App;
 use FluentSupport\Framework\Database\ConnectionResolverInterface;
 
@@ -48,14 +47,14 @@ class ConnectionResolver implements ConnectionResolverInterface
         }
 
         if (is_null($name)) {
-            $name = $this->getDefaultConnection();
+            return $this->getDefaultConnection();
         }
 
         if (isset($this->connections[$name])) {
             return $this->connections[$name];
         }
 
-        throw new InvalidArgumentException("Connection [{$name}] not found.");
+        return $this->getDefaultConnection();
     }
 
     /**
@@ -88,7 +87,7 @@ class ConnectionResolver implements ConnectionResolverInterface
      */
     public function getDefaultConnection()
     {
-        return $this->default;
+        return $this->default ?: App::getInstance('db');
     }
 
     /**

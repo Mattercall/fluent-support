@@ -1,4 +1,3 @@
-<?php defined('ABSPATH') or die; ?>
 .fs_comment {
     color: #2b2e2f;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';

@@ -3,7 +3,6 @@
 namespace FluentSupport\App\Http\Controllers;
 
 use FluentSupport\App\Models\Meta;
-use FluentSupport\Framework\Http\Request\Request;
 use FluentSupport\Framework\Support\Arr;
 use FluentSupport\App\Http\Requests\TicketRequest;
 use FluentSupport\App\Http\Requests\TicketResponseRequest;
@@ -14,6 +13,7 @@ use FluentSupport\App\Services\FluentCRMServices;
 use FluentSupport\App\Services\Helper;
 use FluentSupport\App\Services\ProfileInfoService;
 use FluentSupport\App\Services\TicketHelper;
+use FluentSupport\Framework\Request\Request;
 use FluentSupport\App\Modules\PermissionManager;
 use FluentSupport\App\Services\Tickets\TicketService;
 
@@ -35,25 +35,15 @@ class TicketController extends Controller
     public function me(Request $request, ProfileInfoService $profileInfoService)
     {
         $user = wp_get_current_user();
-        $requestData = $request->all();
-        $sanitizedRequest = [];
-        foreach ($requestData as $key => $value) {
-            if (is_array($value)) {
-                $sanitizedRequest[$key] = map_deep($value, 'sanitize_text_field');
-            } else {
-                $sanitizedRequest[$key] = sanitize_text_field($value);
-            }
-        }
-
         $settings = [
-            'user_id'     => $user->ID,
-            'email'       => $user->user_email,
-            'person'      => Helper::getAgentByUserId($user->ID),
+            'user_id' => $user->ID,
+            'email' => $user->user_email,
+            'person' => Helper::getAgentByUserId($user->ID),
             'permissions' => PermissionManager::currentUserPermissions(),
-            'request'     => $sanitizedRequest
+            'request' => $request->all()
         ];
 
-        $withPortalSettings = $request->getSafe('with_portal_settings', 'sanitize_text_field');
+        $withPortalSettings = $request->getSafe('with_portal_settings');
 
         return $profileInfoService->me($settings, $withPortalSettings);
     }
@@ -66,16 +56,8 @@ class TicketController extends Controller
     public function index(Request $request, TicketService $ticketService)
     {
         //Selected filter type, either simple or Advanced
-        $filterType = $request->getSafe('filter_type', 'sanitize_text_field', 'simple');
-        $requestData = $request->all();
-        $data = [];
-        foreach ($requestData as $key => $value) {
-            if (is_array($value)) {
-                $data[$key] = map_deep($value, 'sanitize_text_field');
-            } else {
-                $data[$key] = sanitize_text_field($value);
-            }
-        }
+        $filterType = $request->getText('filter_type', 'simple');
+        $data = $request->all();
         return $ticketService->getTickets($data, $filterType);
     }
 
@@ -108,7 +90,7 @@ class TicketController extends Controller
 
         return [
             'message' => 'Ticket has been successfully created',
-            'ticket'  => $createdTicket
+            'ticket' => $createdTicket
         ];
     }
 
@@ -121,17 +103,13 @@ class TicketController extends Controller
     public function getTicket(Request $request, Ticket $ticket, $ticket_id)
     {
         try {
-            $ticketWith = $request->get('with');
-            $ticketWith = is_array($ticketWith) ? map_deep($ticketWith, 'sanitize_text_field') : null;
-
+            $ticketWith = $request->getSafe('with', 'sanitize_text_field');
             if (!$ticketWith) {
                 $ticketWith = ['customer', 'agent', 'product', 'mailbox', 'tags', 'attachments' => function ($q) {
                     $q->whereIn('status', ['active', 'inline']);
                 }];
             }
-            $withData = $request->get('with_data', null);
-            $withDataArray = is_array($withData) ? map_deep($withData, 'sanitize_text_field') : [];
-            $withCrmData = in_array('fluentcrm_profile', $withDataArray);
+            $withCrmData = in_array('fluentcrm_profile', $request->query('with_data', []));
 
             return $ticket->getTicket($ticketWith, $withCrmData, $ticket_id);
         } catch (\Exception $e) {
@@ -242,7 +220,7 @@ class TicketController extends Controller
     public function closeTicket(Ticket $ticket, $ticket_id)
     {
         try {
-            return $ticket->closeTicket($ticket_id, $this->request->getSafe('close_ticket_silently', 'rest_sanitize_boolean'));
+            return $ticket->closeTicket($ticket_id, $this->request->getSafe('close_ticket_silently'));
         } catch (\Exception $e) {
             return $this->sendError($e->getMessage());
         }
@@ -274,7 +252,7 @@ class TicketController extends Controller
     public function doBulkActions(Request $request, Ticket $ticket)
     {
         $action = $request->getSafe('bulk_action', 'sanitize_text_field'); //get action
-        $ticket_ids = $request->getSafe('ticket_ids', null, []);
+        $ticket_ids = $request->get('ticket_ids', []);
         $sanitizedTicketIds = array_map('intval', $ticket_ids);
 
         try {
@@ -310,25 +288,9 @@ class TicketController extends Controller
      */
     public function doBulkReplies(Request $request, Conversation $conversation)
     {
-        // Sanitize all request data before validation
-        $requestData = $request->all();
-        $data = [];
-        foreach ($requestData as $key => $value) {
-            if (is_array($value)) {
-                if ($key === 'ticket_ids') {
-                    $data[$key] = array_map('intval', $value);
-                } elseif ($key === 'content') {
-                    $data[$key] = wp_kses_post($value);
-                } else {
-                    $data[$key] = map_deep($value, 'sanitize_text_field');
-                }
-            } else {
-                $data[$key] = sanitize_text_field($value);
-            }
-        }
-
+        $data = $request->get();
         $this->validate($data, [
-            'content'    => 'required',
+            'content' => 'required',
             'ticket_ids' => 'required|array'
         ]);
 
@@ -367,11 +329,7 @@ class TicketController extends Controller
      */
     public function updateResponse(TicketResponseRequest $request, Conversation $conversation, $ticket_id, $response_id)
     {
-        $data = [
-            'content'     => $request->getSafe('content', 'wp_kses_post'),
-            'ticket_id'   => $request->getSafe('ticket_id', 'intval'),
-            'response_id' => $request->getSafe('response_id', 'intval')
-        ];
+        $data = $request->getSafe(['content', 'ticket_id', 'response_id']);
 
         try {
             return $conversation->updateResponse($data, $ticket_id, $response_id);
@@ -383,7 +341,7 @@ class TicketController extends Controller
     public function approveDraftResponse(TicketResponseRequest $request, Conversation $conversation, $ticket_id, $response_id)
     {
         $data = [
-            'content' => $request->getSafe('content', 'wp_kses_post')
+            'content' => $request->getSafe('content', 'sanitize_text_field')
         ];
         $conversationType = 'response';
 
@@ -420,7 +378,7 @@ class TicketController extends Controller
         $agent = Helper::getAgentByUserId();
 
         return [
-            'result'   => TicketHelper::removeFromActivities($ticket_id, $agent->id),
+            'result' => TicketHelper::removeFromActivities($ticket_id, $agent->id),
             'agent_id' => $agent->id
         ];
     }
@@ -439,7 +397,7 @@ class TicketController extends Controller
 
         return [
             'message' => __('Tag has been added to this ticket', 'fluent-support'),
-            'tags'    => $ticket->tags
+            'tags' => $ticket->tags
         ];
     }
 
@@ -456,7 +414,7 @@ class TicketController extends Controller
 
         return [
             'message' => __('Tag has been removed from this ticket', 'fluent-support'),
-            'tags'    => $ticket->tags
+            'tags' => $ticket->tags
         ];
     }
 
@@ -499,7 +457,7 @@ class TicketController extends Controller
     {
         if (!defined('FLUENTSUPPORTPRO')) {
             return [
-                'custom_data'     => [],
+                'custom_data' => [],
                 'rendered_fields' => []
             ];
         }
@@ -507,7 +465,7 @@ class TicketController extends Controller
         $ticket = Ticket::findOrFail($ticket_id);
 
         return [
-            'custom_data'     => (object)$ticket->customData(),
+            'custom_data' => (object)$ticket->customData(),
             'rendered_fields' => \FluentSupportPro\App\Services\CustomFieldsService::getRenderedPublicFields($ticket->customer, 'admin')
         ];
     }
@@ -521,16 +479,7 @@ class TicketController extends Controller
      */
     public function syncFluentCrmTags(Request $request, FluentCRMServices $fluentCRMServices)
     {
-        $data = [
-            'contact_id' => $request->getSafe('contact_id', 'intval'),
-            'tags'       => $request->getSafe('tags', null, [])
-        ];
-
-        // Sanitize tags array if it's an array
-        if (is_array($data['tags'])) {
-            $data['tags'] = array_map('intval', $data['tags']);
-        }
-
+        $data = $request->only(['contact_id', 'tags']);
         try {
             return $fluentCRMServices->syncCrmTags($data);
         } catch (\Exception $e) {
@@ -548,16 +497,7 @@ class TicketController extends Controller
 
     public function syncFluentCrmLists(Request $request, FluentCRMServices $fluentCRMServices)
     {
-        $data = [
-            'contact_id' => $request->getSafe('contact_id', 'intval'),
-            'lists'      => $request->getSafe('lists', null, [])
-        ];
-
-        // Sanitize lists array if it's an array
-        if (is_array($data['lists'])) {
-            $data['lists'] = array_map('intval', $data['lists']);
-        }
-
+        $data = $request->only(['contact_id', 'lists']);
         try {
             return $fluentCRMServices->syncCrmLists($data);
         } catch (\Exception $e) {
@@ -577,7 +517,7 @@ class TicketController extends Controller
 
         foreach ($boards as $board) {
             $formattedBoard = [
-                'id'    => $board->id,
+                'id' => $board->id,
                 'title' => $board->title,
                 'tasks' => [],
             ];
@@ -591,19 +531,19 @@ class TicketController extends Controller
     /**
      * Retrieve stages for a specific board from Fluent Boards API.
      *
-     * @param Request $request Request object containing 'board_id'.
+     * @param  Request  $request Request object containing 'board_id'.
      * @return array Formatted array of stages.
      */
     public function getStages(Request $request)
     {
-        $boardId = $request->getSafe('board_id', 'intval');
+        $boardId = $request->input('board_id');
         $boardStages = FluentBoardsApi('boards')->getStagesByBoard($boardId);
 
         $formattedStages = [];
         if (!empty($boardStages)) {
             foreach ($boardStages[0]->stages as $stage) {
                 $formattedStages[] = [
-                    'id'    => $stage->id,
+                    'id' => $stage->id,
                     'title' => $stage->title,
                 ];
             }
@@ -615,22 +555,22 @@ class TicketController extends Controller
     /**
      * Create a task using data provided in the request.
      *
-     * @param Request $request Request object containing task data.
+     * @param  Request  $request Request object containing task data.
      * @return array Response containing message and task data.
      */
     public function createTask(Request $request, FluentBoardsService $fluentBoardsService)
     {
         try {
             $taskData = [
-                'source_id'      => $request->getSafe('source_id', 'intval'),
-                'board_id'       => $request->getSafe('board_id', 'intval'),
-                'stage_id'       => $request->getSafe('stage_id', 'intval'),
+                'source_id' => $request->getSafe('source_id', 'intval'),
+                'board_id' => $request->getSafe('board_id', 'intval'),
+                'stage_id' => $request->getSafe('stage_id', 'intval'),
                 'crm_contact_id' => $request->getSafe('crm_contact_id', 'intval') ?: null,
-                'title'          => $request->getSafe('title', 'sanitize_text_field'),
-                'description'    => $request->getSafe('description', 'wp_kses_post'),
-                'source'         => $request->getSafe('source', 'sanitize_text_field'),
-                'started_at'     => $request->getSafe('started_at', 'sanitize_text_field'),
-                'due_at'         => $request->getSafe('due_at', 'sanitize_text_field'),
+                'title' => $request->getSafe('title', 'sanitize_text_field'),
+                'description' => $request->getSafe('description', 'wp_kses_post'),
+                'source' => $request->getSafe('source', 'sanitize_text_field'),
+                'started_at' => $request->getSafe('started_at', 'sanitize_text_field'),
+                'due_at' => $request->getSafe('due_at', 'sanitize_text_field'),
             ];
 
             $task = FluentBoardsApi('tasks')->create($taskData);
@@ -644,7 +584,7 @@ class TicketController extends Controller
 
             return [
                 'message' => __('Task successfully added to Fluent Boards', 'fluent-support'),
-                'task'    => $task
+                'task' => $task
             ];
         } catch (\Exception $e) {
             return $this->sendError($e->getMessage());
@@ -659,7 +599,7 @@ class TicketController extends Controller
      */
     public function getTicketEssentials(Request $request)
     {
-        $type = $request->getSafe('type', 'sanitize_text_field');
+        $type = $request->get('type');
 
         return TicketHelper::getTicketEssentials($type);
     }
@@ -678,13 +618,10 @@ class TicketController extends Controller
     {
         try {
             $agent_id = get_current_user_id();
-            $searchData = $request->getSafe('query', null, []);
-            if (is_array($searchData)) {
-                $searchData = map_deep($searchData, 'sanitize_text_field');
-            }
+            $searchData = $request->get('query');
             $filterType = Arr::get($searchData, 'filter_type', '');
             if ($filterType == 'advanced') {
-                return TicketHelper::saveSearchLabel($agent_id, $searchData, $filterType);
+                return TicketHelper::saveSearchLabel($agent_id,$searchData,$filterType);
             }
 
             return [

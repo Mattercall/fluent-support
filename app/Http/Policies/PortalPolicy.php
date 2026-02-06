@@ -5,7 +5,7 @@ namespace FluentSupport\App\Http\Policies;
 use FluentSupport\App\Models\Ticket;
 use FluentSupport\App\Modules\PermissionManager;
 use FluentSupport\App\Services\Helper;
-use FluentSupport\Framework\Http\Request\Request;
+use FluentSupport\Framework\Request\Request;
 use FluentSupport\Framework\Foundation\Policy;
 
 class PortalPolicy extends Policy
@@ -87,13 +87,15 @@ class PortalPolicy extends Policy
      * @param \FluentSupport\Framework\Request\Request $request
      * @return Boolean
      */
+
     protected function maybePublicSignedRequest($request)
     {
-        $ticketHash = $request->getSafe('intended_ticket_hash', 'sanitize_text_field');
-
-        if ($ticketHash && Helper::isPublicSignedTicketEnabled()) {
-            $ticketId = $request->getSafe('ticket_id', 'intval');
-            return !!Ticket::where('hash', $ticketHash)->find($ticketId);
+        if ($request->get('intended_ticket_hash') && Helper::isPublicSignedTicketEnabled()) {
+            $ticketHash = sanitize_text_field($request->get('intended_ticket_hash'));
+            if ($ticketHash != 'undefined') {
+                $ticketId = absint($request->get('ticket_id'));
+                return !!Ticket::where('hash', $ticketHash)->find($ticketId);
+            }
         }
 
         return $this->verifyRequest($request);

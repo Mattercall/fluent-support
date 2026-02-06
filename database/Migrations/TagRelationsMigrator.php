@@ -36,7 +36,7 @@ class TagRelationsMigrator
         return false;
     }
 
-    public static function alterTable($table)
+    public static function alterTable($table) 
     {
         static::addMissingIndexes($table);
     }
@@ -58,16 +58,16 @@ class TagRelationsMigrator
 
         // Desired indexes
         $indexes = [
-            'idx_tag_id' => '`tag_id`',
-            'idx_source_id' => '`source_id`',
-            'idx_source_type' => '`source_type`',
-            'idx_tag_source' => '`tag_id`, `source_id`',
+            'idx_tag_id' => 'tag_id',
+            'idx_source_id' => 'source_id',
+            'idx_source_type' => 'source_type',
+            'idx_tag_source' => 'tag_id,source_id',
         ];
 
         // Add missing indexes
-        foreach ($indexes as $index_name => $columns) {
+        foreach ($indexes as $index_name => $column_name) {
             if (!in_array($index_name, $existing_index_names)) {
-                $sql = "ALTER TABLE `$table` ADD INDEX `$index_name` ($columns)";
+                $sql = "ALTER TABLE `$table` ADD INDEX `$index_name` (`$column_name`)";
                 $wpdb->query($sql);
             }
         }

@@ -23,8 +23,8 @@ class HandleSlackEvent
 
         $request = App::getInstance('request');
 
-        if ($request->getSafe('type', 'sanitize_text_field') == 'url_verification') {
-            echo wp_kses_post($request->getSafe('challenge', 'sanitize_text_field'));
+        if ($request->get('type') == 'url_verification') {
+            echo wp_kses_post($request->get('challenge'));
         }
 
         return (new SlackNotification())->processSlackEvent($request->get('event'));

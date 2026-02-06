@@ -40,7 +40,7 @@ class FluentBotAPI
 
         if ($statusCode !== 200) {
             $error = $responseBody['message'] ?? __('Something went wrong.', 'fluent-support');
-            return new \WP_Error($statusCode, $error);
+            return new \WP_Error($statusCode, __($error, 'fluent-support'));
         }
 
         $content = $responseBody['response'] ?? '';
@@ -64,14 +64,6 @@ class FluentBotAPI
         $timeout = apply_filters('fs_ai_request_timeout', 120);
 
         // Use cURL for streaming
-        // Note: Using cURL here because WordPress HTTP API doesn't support streaming SSE responses
-        // phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_init
-        // phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_setopt
-        // phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_exec
-        // phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_close
-        // phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_getinfo
-        // phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_error
-        // PluginCheck:ignoreFile
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -100,27 +92,27 @@ class FluentBotAPI
 
                     foreach ($lines as $line) {
                         if (strpos($line, 'event: ') === 0) {
-                            $eventType = trim((string)substr($line, 7));
+                            $eventType = trim(substr($line, 7));
                         } elseif (strpos($line, 'id: ') === 0) {
-                            $eventId = trim((string)substr($line, 4));
+                            $eventId = trim(substr($line, 4));
                         } elseif (strpos($line, 'data: ') === 0) {
-                            $eventDataLines[] = (string)substr($line, 6);
+                            $eventDataLines[] = substr($line, 6);
                         }
                     }
 
                     // Forward the event to the browser with proper formatting
                     if ($eventType) {
-                        echo "event: ".esc_html($eventType)."\n";
+                        echo "event: {$eventType}\n";
 
                         // Include ID if present
                         if ($eventId !== '') {
-                            echo "id: ".esc_html($eventId)."\n";
+                            echo "id: {$eventId}\n";
                         }
 
                         // Handle multiple data lines properly
                         if (!empty($eventDataLines)) {
                             foreach ($eventDataLines as $dataLine) {
-                                echo "data: ".esc_html($dataLine)."\n";
+                                echo "data: {$dataLine}\n";
                             }
                         } else {
                             echo "data: \n";
@@ -155,13 +147,6 @@ class FluentBotAPI
         }
 
         curl_close($ch);
-
-        // phpcs:enable WordPress.WP.AlternativeFunctions.curl_curl_init
-        // phpcs:enable WordPress.WP.AlternativeFunctions.curl_curl_setopt
-        // phpcs:enable WordPress.WP.AlternativeFunctions.curl_curl_exec
-        // phpcs:enable WordPress.WP.AlternativeFunctions.curl_curl_close
-        // phpcs:enable WordPress.WP.AlternativeFunctions.curl_curl_getinfo
-        // phpcs:enable WordPress.WP.AlternativeFunctions.curl_curl_error
 
         if ($httpCode === 200) {
             do_action('fluent_support/ai_response_success', $ticketId, $prompt, 0, "Fluent Bot");

@@ -127,13 +127,7 @@ class TicketHelper
             ])
             ->oldest('last_customer_response')
             ->limit($limit)
-            ->with(
-            [
-                'customer', 
-                'mailbox',
-                'tags',
-                'agent'
-            ])
+            ->with('customer')
             ->get();
 
         //If no ticket is available for reply and logged-in user has permission to manage unassigned tickets
@@ -146,12 +140,7 @@ class TicketHelper
                     $q->whereNull('agent_id');
                     $q->orWhere('agent_id', '0');
                 })
-                ->with(
-                [
-                    'customer', 
-                    'mailbox',
-                    'tags',
-                ])
+                ->with('customer')
                 ->limit($limit)
                 ->get();
         }
@@ -179,13 +168,7 @@ class TicketHelper
         $agent = Helper::getCurrentAgent();
         $restrictedBusinessBoxes = PermissionManager::currentUserRestrictedBusinessBoxes();
 
-        $tickets = Ticket::with(
-            [
-                'customer', 
-                'mailbox',
-                'tags',
-                'agent'
-            ])
+        $tickets = Ticket::with('customer')
             ->limit(5)
             ->whereNotIn('mailbox_id', $restrictedBusinessBoxes)
             ->join('fs_tag_pivot', 'fs_tag_pivot.source_id', '=', 'fs_tickets.id')

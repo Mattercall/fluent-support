@@ -9,7 +9,7 @@ use FluentSupport\App\Models\Product;
 use FluentSupport\App\Services\EmailNotification\Settings;
 use FluentSupport\App\Services\Helper;
 use FluentSupport\Database\Migrations\AIActivityLogsMigrator;
-use FluentSupport\Framework\Http\Request\Request;
+use FluentSupport\Framework\Request\Request;
 use FluentSupport\App\Hooks\Handlers\ReCaptchaHandler;
 
 /**
@@ -59,8 +59,7 @@ class SettingsController extends Controller
     public function saveSettings(Request $request)
     {
         $settingsKey = $request->getSafe('settings_key', 'sanitize_text_field');
-        $settings = wp_unslash($request->get('settings', null));
-        $settings = is_array($settings) ? map_deep($settings, 'sanitize_text_field') : [];
+        $settings = wp_unslash($request->getSafe('settings', null, []));
         (new Settings)->save($settingsKey, $settings);
 
         return [
@@ -87,25 +86,14 @@ class SettingsController extends Controller
      */
     public function setupPortal(Request $request)
     {
-        $mailbox = $request->get('mailbox', null);
-        $mailbox = is_array($mailbox) ? [
-            'name'     => isset($mailbox['name']) ? sanitize_text_field($mailbox['name']) : '',
-            'email'    => isset($mailbox['email']) ? sanitize_email($mailbox['email']) : '',
-            'box_type' => isset($mailbox['box_type']) ? sanitize_key($mailbox['box_type']) : '',
-            'is_default' => isset($mailbox['is_default']) ? sanitize_text_field($mailbox['is_default']) : 'yes',
-        ] : [];
-
+        $mailbox = $request->getSafe('mailbox');
         $this->validate($mailbox, [
             'name'     => 'required',
             'email'    => 'required|email',
             'box_type' => 'required'
         ]);
 
-        $settings = $request->get('global_settings', null);
-        $settings = is_array($settings) ? [
-            'create_portal_page' => isset($settings['create_portal_page']) ? sanitize_text_field($settings['create_portal_page']) : 'no',
-            'portal_page_id'     => isset($settings['portal_page_id']) ? intval($settings['portal_page_id']) : 0,
-        ] : [];
+        $settings = $request->getSafe('global_settings');
 
         $createPage = $settings['create_portal_page'] == 'yes';
 
@@ -248,7 +236,7 @@ class SettingsController extends Controller
 
     public function setupInstallation(Request $request)
     {
-        $installFluentForm = $request->getSafe('install_fluentform', 'sanitize_text_field', 'no');
+        $installFluentForm = $request->get('install_fluentform', 'no');
 
         if ($installFluentForm == 'yes' && !defined('FLUENTFORM')) {
             $this->installFluentForm();
@@ -272,7 +260,7 @@ class SettingsController extends Controller
 
     public function saveReCaptchaSettings(Request $request)
     {
-        $data = $request->getSafe('reCaptcha', 'sanitize_text_field');
+        $data = $request->get('reCaptcha');
 
         if ('clear-reCaptcha-settings' == $data) {
             if (Meta::where('object_type', '_fs_recaptcha_settings')->delete()) {
@@ -332,9 +320,10 @@ class SettingsController extends Controller
 
     public function saveOpenAISettings(Request $request)
     {
+        $data = $request->get();
         $data = [
-            'api_key' => $request->getSafe('api_key', 'sanitize_text_field', ''),
-            'model' => $request->getSafe('model', 'sanitize_text_field', ''),
+            'api_key' => sanitize_text_field($data['api_key']),
+            'model' => sanitize_text_field($data['model']),
         ];
 
         $response = Helper::authorizeChatGPTAPIKey($data);
@@ -504,16 +493,16 @@ class SettingsController extends Controller
             ]);
         }
 
-        $plugin_id = 'fluentform';
+        $plugin_id = 'fluent-crm';
         $plugin = [
-            'name'      => 'Fluent Forms',
-            'repo-slug' => 'fluentform',
-            'file'      => 'fluentform.php',
+            'name'      => 'Fluent CRM',
+            'repo-slug' => 'fluent-crm',
+            'file'      => 'fluent-crm.php',
         ];
 
         $this->backgroundInstaller($plugin, $plugin_id);
 
-        if (defined('FLUENTFORM')) {
+        if (defined('FLUENTCRM')) {
             return [
                 'is_installed' => true,
                 'message'      => __('Fluent Forms plugin has been installed and activated successfully', 'fluent-support')
@@ -754,7 +743,7 @@ class SettingsController extends Controller
         $data = [
             'generalApiKey'    => $request->getSafe('generalApiKey', 'sanitize_text_field'),
             'generalBotId'     => $request->getSafe('generalBotId', 'sanitize_text_field'),
-            'isEnabled'        => $request->getSafe('isEnabled', 'rest_sanitize_boolean'),
+            'isEnabled'        => $request->getSafe('isEnabled', 'sanitize_text_field'),
             'productMappings'  => []
         ];
 

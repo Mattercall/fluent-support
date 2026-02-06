@@ -18,36 +18,19 @@ trait HasGlobalScopes
      *
      * @throws \InvalidArgumentException
      */
-    public static function addGlobalScope($scope, ?Closure $implementation = null)
+    public static function addGlobalScope($scope, Closure $implementation = null)
     {
-        if (is_string($scope) && ($implementation instanceof Closure || $implementation instanceof Scope)) {
+        if (is_string($scope) && ! is_null($implementation)) {
             return static::$globalScopes[static::class][$scope] = $implementation;
-        } elseif ($scope instanceof Closure) {
+        }
+        if ($scope instanceof Closure) {
             return static::$globalScopes[static::class][spl_object_hash($scope)] = $scope;
-        } elseif ($scope instanceof Scope) {
+        }
+        if ($scope instanceof Scope) {
             return static::$globalScopes[static::class][get_class($scope)] = $scope;
-        } elseif (is_string($scope) && class_exists($scope) && is_subclass_of($scope, Scope::class)) {
-            return static::$globalScopes[static::class][$scope] = new $scope;
         }
 
-        throw new InvalidArgumentException('Global scope must be an instance of Closure or Scope or be a class name of a class extending '.Scope::class);
-    }
-
-    /**
-     * Register multiple global scopes on the model.
-     *
-     * @param  array  $scopes
-     * @return void
-     */
-    public static function addGlobalScopes(array $scopes)
-    {
-        foreach ($scopes as $key => $scope) {
-            if (is_string($key)) {
-                static::addGlobalScope($key, $scope);
-            } else {
-                static::addGlobalScope($scope);
-            }
-        }
+        throw new InvalidArgumentException('Global scope must be an instance of Closure or Scope.');
     }
 
     /**
@@ -76,17 +59,6 @@ trait HasGlobalScopes
         return Arr::get(
             static::$globalScopes, static::class.'.'.get_class($scope)
         );
-    }
-
-    /**
-     * Set the current global scopes.
-     *
-     * @param  array  $scopes
-     * @return void
-     */
-    public static function setAllGlobalScopes($scopes)
-    {
-        static::$globalScopes = $scopes;
     }
 
     /**

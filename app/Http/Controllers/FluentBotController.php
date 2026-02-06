@@ -3,7 +3,7 @@
 namespace FluentSupport\App\Http\Controllers;
 
 
-use FluentSupport\Framework\Http\Request\Request;
+use FluentSupport\Framework\Request\Request;
 use FluentSupport\App\Http\Controllers\Controller;
 use FluentSupport\App\Models\Ticket;
 use FluentSupport\App\Services\Integrations\FluentBot\FluentBotService;
@@ -68,9 +68,8 @@ class FluentBotController extends Controller
             } else {
                 $ticket = Ticket::with('responses')->findOrFail($ticketId);
 
-                // Disable all output buffering (with safety limit)
-                $maxLevels = 10;
-                while (ob_get_level() && $maxLevels-- > 0) {
+                // Disable all output buffering
+                while (ob_get_level()) {
                     ob_end_clean();
                 }
 
@@ -103,7 +102,7 @@ class FluentBotController extends Controller
         } catch (\Exception $e) {
             // Send error as SSE event
             echo "event: error\n";
-            echo "data: " . json_encode(['message' => esc_html($e->getMessage())]) . "\n\n";
+            echo "data: " . json_encode(['message' => $e->getMessage()]) . "\n\n";
             flush();
             exit;
         }

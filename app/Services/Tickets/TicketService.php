@@ -87,7 +87,7 @@ class TicketService
             'person_id'         => $person->id,
             'conversation_type' => 'internal_info',
             'content'           => $ticket->agent->user_id !== $person->user_id ?
-                $person->full_name . __(' assigned ', 'fluent-support') . $ticket->agent->full_name . __(' in this ticket', 'fluent-support') :
+                $person->full_name . __(' assigned ') . $ticket->agent->full_name . __(' in this ticket', 'fluent-support') :
                 $person->full_name .__( ' assign this ticket to self', 'fluent-support')
         ]);
 
@@ -144,7 +144,7 @@ class TicketService
             $queryArgs['simple_filters'] = Arr::get($data, 'filters', []);
             $queryArgs['search'] = trim(Arr::get($data, 'search', ''));
             if ($customerId = Arr::get($data, 'customer_id')) {
-                $queryArgs['customer_id'] = intval($customerId);
+                $queryArgs['customer_id'] = $customerId;
             }
         }
 
@@ -161,7 +161,7 @@ class TicketService
             'customer'         => function ($query) {
                 $query->select(['first_name', 'last_name', 'email', 'id', 'avatar']);
             }, 'agent'         => function ($query) {
-                $query->select(['first_name', 'last_name', 'email', 'avatar', 'id']);
+                $query->select(['first_name', 'last_name', 'id']);
             },
             'mailbox',
             'product',
@@ -262,8 +262,7 @@ class TicketService
         });
 
         return [
-            // translators: %d is the number of tickets that were deleted
-            'message' => sprintf(__('%d tickets have been deleted', 'fluent-support'), count($tickets))
+            'message' => __(count($tickets) . ' tickets have been deleted', 'fluent-support')
         ];
     }
 }

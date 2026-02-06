@@ -17,8 +17,8 @@ class AgentCreateRequest extends RequestGuard
     public function messages()
     {
         return [
-            'email.required' => __('Email is required', 'fluent-support'),
-            'first_name.required' => __('First name is required', 'fluent-support')
+            'email.required' => 'Email is required',
+            'first_name.required' => 'First name is required'
         ];
     }
 }

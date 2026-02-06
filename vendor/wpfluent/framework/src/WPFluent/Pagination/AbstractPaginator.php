@@ -10,13 +10,14 @@ use FluentSupport\Framework\Support\Helper;
 use FluentSupport\Framework\Support\Tappable;
 use FluentSupport\Framework\Support\Collection;
 use FluentSupport\Framework\Support\ForwardsCalls;
+use FluentSupport\Framework\Database\Orm\ResourceAbleTrait;
 
 /**
  * @mixin \FluentSupport\Framework\Support\Collection
  */
 abstract class AbstractPaginator
 {
-    use ForwardsCalls, Tappable;
+    use ForwardsCalls, Tappable, ResourceAbleTrait;
 
     /**
      * All of the items being paginated.
@@ -175,7 +176,7 @@ abstract class AbstractPaginator
         }
 
         return $this->path()
-                        .(Str::contains($this->path(), '?') ? '&' : '/?')
+                        .(Str::contains($this->path(), '?') ? '&' : '?')
                         .Arr::query($parameters)
                         .$this->buildFragment();
     }
@@ -435,10 +436,6 @@ abstract class AbstractPaginator
      */
     public function setPath($path)
     {
-        if (!preg_match('/^https?:\/\//i', $path)) {
-            $path = App::make('request')->url() . '/' . trim($path, '/');
-        }
-
         $this->path = $path;
 
         return $this;
@@ -728,10 +725,6 @@ abstract class AbstractPaginator
      */
     public function __toString()
     {
-        if (method_exists($this, 'render')) {
-            return $this->render();
-        }
-
-        return get_class($this);
+        return (string) $this->toArray();
     }
 }

@@ -15,12 +15,9 @@ class ReCaptchaHandler
 
         if(!$secret){
             $reCaptchaSettingsData = Meta::where('object_type', '_fs_recaptcha_settings')->first();
-            if (!$reCaptchaSettingsData) {
-                return false;
-            }
             $settings = Helper::safeUnserialize($reCaptchaSettingsData->value, []);
-            $recaptchaVersion = $settings["reCaptcha_version"] ?? null;
-            $secret = $settings['secretKey'] ?? '';
+            $recaptchaVersion = $settings["reCaptcha_version"];
+            $secret = $settings['secretKey'];
         }
 
         $response = wp_remote_post($verifyUrl, [

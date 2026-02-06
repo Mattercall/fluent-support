@@ -15,7 +15,6 @@ class ZendeskTickets extends BaseImporter
     private $originId;
     private $responseCount;
     private $totalPage;
-    private $errorMessage;
 
     public function stats()
     {
@@ -32,18 +31,15 @@ class ZendeskTickets extends BaseImporter
 
         $this->currentPage = $page;
         $this->handler = $handler;
-        $this->errorMessage = null;
         $tickets = $this->ticketsWithReply();
         $results = $this->migrateTickets($tickets);
 
-        $this->totalPage = $this->limit > 0 ? ceil($this->totalTickets / $this->limit) : 0;
-        
+        $this->totalPage = $this->totalTickets / $this->limit;
         $this->hasMore = $this->currentPage < $this->totalPage;
         $completedNow = isset($results['inserts']) ? count($results['inserts']) : 0;
         $completedTickets = $completedNow + (($this->currentPage - 1) * $this->limit);
         $remainingTickets = $this->totalTickets - $completedTickets;
-        
-        $completed = $this->totalTickets > 0 ? intval(($completedTickets / $this->totalTickets) * 100) : 0;
+        $completed = intval(($completedTickets / $this->totalTickets) * 100);
 
         $response = [
             'handler' => $this->handler,
@@ -58,12 +54,8 @@ class ZendeskTickets extends BaseImporter
             'remaining' => $remainingTickets
         ];
 
-        // Handle errors or success
-        if ($this->errorMessage) {
-            $response['error'] = true;
-            $response['message'] = $this->errorMessage;
-        } elseif (!$this->hasMore && ($this->totalTickets > 0 || $completedNow > 0)) {
-            $response['message'] = __('All tickets have been imported successfully', 'fluent-support');
+        if (!$this->hasMore) {
+            $response['message'] = __('All tickets has been imported successfully', 'fluent-support');
             update_option('_fs_migrate_zendesk', current_time('mysql'), 'no');
         }
 
@@ -73,9 +65,6 @@ class ZendeskTickets extends BaseImporter
     private function ticketsWithReply()
     {
         try {
-            // Initialize totalTickets to prevent undefined
-            $this->totalTickets = 0;
-            
             $this->totalTickets = $this->countTotalTickets();
             $url = "{$this->domain}/api/v2/tickets?per_page={$this->limit}&page={$this->currentPage}";
             $tickets = $this->makeRequest($url);
@@ -106,8 +95,8 @@ class ZendeskTickets extends BaseImporter
                     'status' => $this->getStatus($ticket->status),
                     'client_priority' => $this->getPriority($ticket->priority),
                     'priority' => $this->getPriority($ticket->priority),
-                    'created_at' => $ticket->created_at ? gmdate('Y-m-d h:i:s', strtotime($ticket->created_at)) : null,
-                    'updated_at' => $ticket->updated_at ? gmdate('Y-m-d h:i:s', strtotime($ticket->updated_at)) : null,
+                    'created_at' => date('Y-m-d h:i:s', strtotime($ticket->created_at)),
+                    'updated_at' => date('Y-m-d h:i:s', strtotime($ticket->updated_at)),
                     'last_customer_response' => NULL,
                     'last_agent_response' => NULL,
                     'attachments' => $ticketAttacments
@@ -117,20 +106,6 @@ class ZendeskTickets extends BaseImporter
             return $formattedTickets;
 
         } catch (\Exception $e) {
-            // Store error message for authentication errors
-            $errorMsg = $e->getMessage();
-            if (strpos($errorMsg, 'authenticate') !== false || 
-                strpos($errorMsg, 'Couldn\'t authenticate') !== false ||
-                strpos($errorMsg, '401') !== false) {
-                $this->errorMessage = __('Authentication failed. Please check your Zendesk credentials.', 'fluent-support');
-            } else {
-                // Store any other error message
-                $this->errorMessage = $errorMsg;
-            }
-            // Ensure totalTickets is set to 0 on error
-            if (!isset($this->totalTickets)) {
-                $this->totalTickets = 0;
-            }
             return [];
         }
     }
@@ -143,13 +118,13 @@ class ZendeskTickets extends BaseImporter
             $ticketReply = [
                 'content' => wp_kses_post($reply->body),
                 'conversation_type' => 'response',
-                'created_at' => $reply->created_at ? gmdate('Y-m-d h:i:s', strtotime($reply->created_at)) : null,
-                'updated_at' => !empty($reply->updated_at) ? gmdate('Y-m-d h:i:s', strtotime($reply->updated_at)) : null,
+                'created_at' => date('Y-m-d h:i:s', strtotime($reply->created_at)),
+                'updated_at' => isset($reply->updated_at) ? date('Y-m-d h:i:s', strtotime($reply->updated_at)) : NULL,
             ];
 
             $ticketReply = $this->populatePersonInfo($ticketReply, $reply, $replies->users);
 
-            if (!empty($reply->attachments) && count($reply->attachments)) {
+            if (count($reply->attachments)) {
                 $ticketReply['attachments'] = $this->getAttachments($reply->attachments);
             }
 
@@ -187,40 +162,12 @@ class ZendeskTickets extends BaseImporter
         ]);
 
         if (is_wp_error($request)) {
-            throw new \Exception('Error while making request: ' . esc_html($request->get_error_message()));
+            throw new \Exception('Error while making request');
         }
 
-        $response_code = wp_remote_retrieve_response_code($request);
-        $response_body = wp_remote_retrieve_body($request);
-        $response = json_decode($response_body);
+        $response = json_decode(wp_remote_retrieve_body($request));
 
-        // If status code is 200, don't throw error - check response body for errors instead
-        if ($response_code === 200) {
-            // Check for errors in response body
-            if (isset($response->error)) {
-                $error_msg = $response->error;
-                if (isset($response->description)) {
-                    $error_msg .= ': ' . $response->description;
-                }
-                throw new \Exception(esc_html($error_msg));
-            }
-            return $response;
-        }
-
-        // Handle non-200 status codes
-        if ($response_code === 401) {
-            throw new \Exception('Couldn\'t authenticate you');
-        }
-
-        // Other error status codes
-        $error_msg = 'HTTP Error ' . $response_code;
-        if (isset($response->error)) {
-            $error_msg = $response->error;
-            if (isset($response->description)) {
-                $error_msg .= ': ' . $response->description;
-            }
-        }
-        throw new \Exception(esc_html($error_msg));
+        return $response;
     }
 
     private function fetchPerson($requesterId)

@@ -77,15 +77,15 @@ class FluentCart
         }
 
         $widgets['fct_purchases'] = [
-            'title'  => __('FluentCart Purchases', 'fluent-support'),
+            'title'  => __('Fluent Cart Purchases', 'fluent-support'),
             'products' => $formattedProducts,
             'fluent_cart_customer_id' => $fluentCartCustomer->id,
             'summary' => [
                 'lifetime_value' => \FluentCart\App\Helpers\Helper::toDecimal($fluentCartCustomer->ltv),
                 'currency' => Arr::get($formattedProducts, '0.currency', \FluentCart\Api\CurrencySettings::get('currency')),
                 'total_purchases' => $fluentCartCustomer->purchase_count,
-                'first_purchase' => $fluentCartCustomer->first_purchase_date ? gmdate('F j, Y', strtotime($fluentCartCustomer->first_purchase_date)) : null,
-                'last_purchase' => $fluentCartCustomer->last_purchase_date ? gmdate('F j, Y', strtotime($fluentCartCustomer->last_purchase_date)) : null,
+                'first_purchase' => $fluentCartCustomer->first_purchase_date ? date('F j, Y', strtotime($fluentCartCustomer->first_purchase_date)) : null,
+                'last_purchase' => $fluentCartCustomer->last_purchase_date ? date('F j, Y', strtotime($fluentCartCustomer->last_purchase_date)) : null,
             ]
         ];
 
@@ -99,7 +99,7 @@ class FluentCart
 
     //     if ($licenses) {
     //         $widgets['fct_license'] = [
-    //             'header' => __('FluentCart Product Licenses', 'fluent-support'),
+    //             'header' => __('Fluent Cart Product Licenses', 'fluent-support'),
     //             'licenses' => $licenses
     //         ];
     //     }
@@ -214,7 +214,7 @@ class FluentCart
                 // Format expiration date for tooltip
                 $expirationTooltip = '';
                 if ($expirationDate) {
-                    $expirationTooltip = 'Expires: ' . gmdate('M d, Y', strtotime($expirationDate));
+                    $expirationTooltip = 'Expires: ' . date('M d, Y', strtotime($expirationDate));
                 } else {
                     $expirationTooltip = 'Expires: Lifetime';
                 }

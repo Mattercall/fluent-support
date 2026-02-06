@@ -17,9 +17,7 @@ class DataExporter
         $from_date = $request->getSafe('from_date', 'sanitize_text_field');
         $to_date = $request->getSafe('to_date', 'sanitize_text_field');
         $columns = $request->get('columns', []);
-        $columns = is_array($columns) ? array_map('sanitize_text_field', $columns) : [];
         $agents = $request->get('agents', []);
-        $agents = is_array($agents) ? array_map('intval', $agents) : [];
         if (empty($columns)) {
             $columns = Helper::getExportOptions();
         }
@@ -89,7 +87,7 @@ class DataExporter
     {
         $permission = 'fst_view_all_reports';
 
-        if ( ! isset($_REQUEST['_wpnonce']) || ! wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['_wpnonce'])), 'fluent-support') ) {
+        if ( ! isset($_REQUEST['_wpnonce']) || ! wp_verify_nonce($_REQUEST['_wpnonce'], 'fluent-support') ) {
             wp_die('Security check failed');
         }
 

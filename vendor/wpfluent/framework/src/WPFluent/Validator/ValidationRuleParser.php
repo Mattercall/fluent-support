@@ -3,7 +3,6 @@
 namespace FluentSupport\Framework\Validator;
 
 use Closure;
-use FluentSupport\Framework\Framework\Support\Arr;
 use FluentSupport\Framework\Validator\Rules\Exists;
 use FluentSupport\Framework\Validator\Rules\Unique;
 use FluentSupport\Framework\Validator\Rules\ConditionalRules;
@@ -158,7 +157,7 @@ class ValidationRuleParser
         foreach ($data as $key => $value) {
             if (substr($key, 0, strlen($attribute)) === $attribute || (bool) preg_match('/^'.$pattern.'\z/', $key)) {
                 foreach ((array) $rules as $rule) {
-                    $results = $this->mergeRules($results, $key, $rule, $attribute);
+                    $results = $this->mergeRules($results, $key, $rule);
                 }
             }
         }
@@ -172,22 +171,21 @@ class ValidationRuleParser
      * @param array $results
      * @param string|array $attribute
      * @param string|array $rules
-     * @param string|null  $originalRuleKey
      *
      * @return array
      */
-    public function mergeRules($results, $attribute, $rules = [], $originalRuleKey = null)
+    public function mergeRules($results, $attribute, $rules = [])
     {
         if (is_array($attribute)) {
             foreach ((array) $attribute as $innerAttribute => $innerRules) {
-                $results = $this->mergeRulesForAttribute($results, $innerAttribute, $innerRules, $originalRuleKey);
+                $results = $this->mergeRulesForAttribute($results, $innerAttribute, $innerRules);
             }
 
             return $results;
         }
 
         return $this->mergeRulesForAttribute(
-            $results, $attribute, $rules , $originalRuleKey
+            $results, $attribute, $rules
         );
     }
 
@@ -197,19 +195,14 @@ class ValidationRuleParser
      * @param array $results
      * @param string $attribute
      * @param string|array $rules
-     * @param string|null  $originalRuleKey
      *
      * @return array
      */
-    protected function mergeRulesForAttribute($results, $attribute, $rules, $originalRuleKey = null)
+    protected function mergeRulesForAttribute($results, $attribute, $rules)
     {
         $array = $this->explodeRules([$rules]);
 
         $merge = reset($array);
-
-        if(!empty($originalRuleKey)){
-            $merge['rule_key'] = $originalRuleKey;
-        }
 
         $results[$attribute] = array_merge(
             isset($results[$attribute]) ?
@@ -238,7 +231,7 @@ class ValidationRuleParser
         if (strpos($rule, ':') !== false) {
             list($rule, $parameter) = explode(':', $rule, 2);
 
-            $parameters = str_getcsv($parameter, ',', '"', '\\');
+            $parameters = str_getcsv($parameter);
         }
 
         return [trim($rule), $parameters];

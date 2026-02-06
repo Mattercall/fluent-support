@@ -23,7 +23,7 @@ class ProductRequest extends RequestGuard
     public function messages()
     {
         return [
-            'title.required' => __('Product Title is required', 'fluent-support')
+            'title.required' => 'Product Title is required'
         ];
     }
 

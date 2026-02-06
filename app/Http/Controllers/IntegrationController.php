@@ -3,7 +3,7 @@
 namespace FluentSupport\App\Http\Controllers;
 
 use FluentSupport\App\Modules\IntegrationSettingsModule;
-use FluentSupport\Framework\Http\Request\Request;
+use FluentSupport\Framework\Request\Request;
 
 class IntegrationController extends Controller
 {

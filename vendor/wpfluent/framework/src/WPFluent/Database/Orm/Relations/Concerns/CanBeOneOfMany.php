@@ -138,12 +138,13 @@ trait CanBeOneOfMany
      * Indicate that the relation is the latest single result of a larger one-to-many relationship.
      *
      * @param  string|array|null  $column
+     * @param  string|Closure|null  $aggregate
      * @param  string|null  $relation
      * @return $this
      */
     public function latestOfMany($column = 'id', $relation = null)
     {
-        return $this->ofMany(Helper::collect(Arr::wrap($column))->mapWithKeys(function ($column) {
+        return $this->ofMany(Helper::collect(Arr::wrap($column))->mapWithKeys(function ($column) { // @need_fix: collect undefined here
             return [$column => 'MAX'];
         })->all(), 'MAX', $relation);
     }
@@ -152,12 +153,13 @@ trait CanBeOneOfMany
      * Indicate that the relation is the oldest single result of a larger one-to-many relationship.
      *
      * @param  string|array|null  $column
+     * @param  string|Closure|null  $aggregate
      * @param  string|null  $relation
      * @return $this
      */
     public function oldestOfMany($column = 'id', $relation = null)
     {
-        return $this->ofMany(Helper::collect(Arr::wrap($column))->mapWithKeys(function ($column) {
+        return $this->ofMany(Helper::collect(Arr::wrap($column))->mapWithKeys(function ($column) { // @need_fix: collect undefined here
             return [$column => 'MIN'];
         })->all(), 'MIN', $relation);
     }
@@ -197,7 +199,7 @@ trait CanBeOneOfMany
             $subQuery->selectRaw($aggregate.'('.$subQuery->getQuery()->grammar->wrap($subQuery->qualifyColumn($column)).') as '.$subQuery->getQuery()->grammar->wrap($column.'_aggregate'));
         }
 
-        $this->addOneOfManySubQueryConstraints($subQuery, $column, $aggregate);
+        $this->addOneOfManySubQueryConstraints($subQuery, $groupBy, $column, $aggregate);
 
         return $subQuery;
     }
@@ -218,7 +220,7 @@ trait CanBeOneOfMany
             $parent->joinSub($subQuery, $this->relationName, function ($join) use ($on) {
                 $join->on($this->qualifySubSelectColumn($on.'_aggregate'), '=', $this->qualifyRelatedColumn($on));
 
-                $this->addOneOfManyJoinSubQueryConstraints($join);
+                $this->addOneOfManyJoinSubQueryConstraints($join, $on);
             });
         });
     }
@@ -226,7 +228,7 @@ trait CanBeOneOfMany
     /**
      * Merge the relationship query joins to the given query builder.
      *
-     * @param  \FluentSupport\Framework\Database\Orm\Builder  $query
+     * @param  \FluentSupport\Framework\Database\Orm\Builder  $builder
      * @return void
      */
     protected function mergeOneOfManyJoinsTo(Builder $query)

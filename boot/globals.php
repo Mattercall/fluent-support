@@ -1,7 +1,5 @@
 <?php
 
-if ( ! defined( 'ABSPATH' ) ) exit;
-
 /**
  ***** DO NOT CALL ANY FUNCTIONS DIRECTLY FROM THIS FILE ******
  *

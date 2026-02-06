@@ -12,7 +12,7 @@ trait InteractsWithDictionary
      * @param  mixed  $attribute
      * @return mixed
      *
-     * @throws \FluentSupport\Framework\Support\InvalidArgumentException
+     * @throws FluentSupport\Framework\Support\InvalidArgumentException // @need_fix: Need Proper Namespace
      */
     protected function getDictionaryKey($attribute)
     {

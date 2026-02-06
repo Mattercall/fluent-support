@@ -2,7 +2,6 @@
 
 namespace FluentSupport\Framework\Database\Orm\Casts;
 
-use InvalidArgumentException;
 use FluentSupport\Framework\Foundation\App;
 use FluentSupport\Framework\Support\Collection;
 use FluentSupport\Framework\Database\Orm\Castable;
@@ -18,30 +17,12 @@ class AsEncryptedCollection implements Castable
      */
     public static function castUsing(array $arguments)
     {
-        return new class($arguments) implements CastsAttributes
+        return new class implements CastsAttributes
         {
-            private $arguments = [];
-
-            public function __construct(array $arguments) {
-                $this->arguments = $arguments;
-            }
-
             public function get($model, $key, $value, $attributes)
             {
-                $collectionClass = $this->arguments[0] ?? Collection::class;
-
-                if (! is_a($collectionClass, Collection::class, true)) {
-                    throw new InvalidArgumentException(
-                        'The provided class must extend ['.Collection::class.'].'
-                    );
-                }
-
                 if (isset($attributes[$key])) {
-                    return new $collectionClass(
-                        Json::decode(
-                            App::make('encryptr')->decryptString($attributes[$key])
-                        )
-                    );
+                    return new Collection(json_decode(App::make('encrypter')->decryptString($attributes[$key]), true));
                 }
 
                 return null;
@@ -50,26 +31,11 @@ class AsEncryptedCollection implements Castable
             public function set($model, $key, $value, $attributes)
             {
                 if (! is_null($value)) {
-                    return [
-                        $key => App::make('encryptr')->encryptString(
-                            Json::encode($value)
-                        )
-                    ];
+                    return [$key => App::make('encrypter')->encryptString(json_encode($value))];
                 }
 
                 return null;
             }
         };
-    }
-
-    /**
-     * Specify the collection for the cast.
-     *
-     * @param  class-string  $class
-     * @return string
-     */
-    public static function using($class)
-    {
-        return static::class.':'.$class;
     }
 }

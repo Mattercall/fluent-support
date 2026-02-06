@@ -7,7 +7,7 @@ use FluentSupport\Framework\Database\Orm\Collection;
 use FluentSupport\Framework\Database\Orm\Relations\Concerns\SupportsDefaultModels;
 use FluentSupport\Framework\Database\Orm\Relations\Concerns\InteractsWithDictionary;
 
-class HasOneThrough extends HasOneOrManyThrough
+class HasOneThrough extends HasManyThrough
 {
     use InteractsWithDictionary, SupportsDefaultModels;
 

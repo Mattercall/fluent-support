@@ -24,7 +24,6 @@ use FluentSupport\Framework\Database\Orm\JsonEncodingException;
 use FluentSupport\Framework\Database\LazyLoadingViolationException;
 use FluentSupport\Framework\Database\Orm\CastsInboundAttributes;
 use FluentSupport\Framework\Support\Collection as BaseCollection;
-use FluentSupport\Framework\Database\Orm\MissingAttributeException;
 
 trait HasAttributes
 {
@@ -343,37 +342,30 @@ trait HasAttributes
         $attributes = [];
 
         foreach ($this->getArrayableRelations() as $key => $value) {
-            
-            $relation = null;
-
-            // If the values implements the Arrayable interface we can just call
-            // this toArray method on the instances which will convert
-            // both models and collections to their proper array
-            // form and we'll set the values.
+            // If the values implements the Arrayable interface we can just call this
+            // toArray method on the instances which will convert both models and
+            // collections to their proper array form and we'll set the values.
             if ($value instanceof ArrayableInterface) {
                 $relation = $value->toArray();
             }
 
-            // If the value is null, we'll still go ahead and set it in this
-            // list of attributes since null is used to represent empty
-            // relationships if if it a has one or belongs to type
-            // relationships on the models.
+            // If the value is null, we'll still go ahead and set it in this list of
+            // attributes since null is used to represent empty relationships if
+            // if it a has one or belongs to type relationships on the models.
             elseif (is_null($value)) {
                 $relation = $value;
             }
 
-            // If the relationships snake-casing is enabled, we will snake case
-            // this key so that the relation attribute is snake cased
-            // in this returned array to the developers, making
-            // this consistent with attributes.
+            // If the relationships snake-casing is enabled, we will snake case this
+            // key so that the relation attribute is snake cased in this returned
+            // array to the developers, making this consistent with attributes.
             if (static::$snakeAttributes) {
                 $key = Str::snake($key);
             }
 
-            // If the relation value has been set, we will set it on this
-            // attributes list for returning. If it was not arrayable
-            // or null, we'll not set the value on the array
-            // because it is some type of invalid value.
+            // If the relation value has been set, we will set it on this attributes
+            // list for returning. If it was not arrayable or null, we'll not set
+            // the value on the array because it is some type of invalid value.
             if (isset($relation) || is_null($value)) {
                 $attributes[$key] = $relation;
             }
@@ -414,25 +406,6 @@ trait HasAttributes
     }
 
     /**
-     * Determine whether an attribute exists on the model.
-     *
-     * @param  string  $key
-     * @return bool
-     */
-    public function hasAttribute($key)
-    {
-        if (! $key) {
-            return false;
-        }
-
-        return array_key_exists($key, $this->attributes) ||
-            array_key_exists($key, $this->casts) ||
-            $this->hasGetMutator($key) ||
-            $this->hasAttributeMutator($key) ||
-            $this->isClassCastable($key);
-    }
-
-    /**
      * Get an attribute from the model.
      *
      * @param  string  $key
@@ -440,53 +413,29 @@ trait HasAttributes
      */
     public function getAttribute($key)
     {
-        if (!$key) {
+        if (! $key) {
             return;
         }
 
-        // If the attribute exists in the attribute array or has a "get" mutator
-        // we will get the attribute's value. Otherwise, we will proceed
-        // as if the developers are asking for a relationship's
-        // value. This covers both types of values.
-
-        if ($this->hasAttribute($key)) {
+        // If the attribute exists in the attribute array or has a "get" mutator we will
+        // get the attribute's value. Otherwise, we will proceed as if the developers
+        // are asking for a relationship's value. This covers both types of values.
+        if (array_key_exists($key, $this->attributes) ||
+            array_key_exists($key, $this->casts) ||
+            $this->hasGetMutator($key) ||
+            $this->hasAttributeMutator($key) ||
+            $this->isClassCastable($key)) {
             return $this->getAttributeValue($key);
         }
 
-        // Here we will determine if the model base class itself contains this
-        // given key since we don't want to treat any of those methods as
-        // relationships because they are all intended as helper
-        // methods and none of these are relations.
-
+        // Here we will determine if the model base class itself contains this given key
+        // since we don't want to treat any of those methods as relationships because
+        // they are all intended as helper methods and none of these are relations.
         if (method_exists(self::class, $key)) {
-            return $this->throwMissingAttributeExceptionIfApplicable($key);
+            return;
         }
 
-        return $this->isRelation($key) || $this->relationLoaded($key)
-                    ? $this->getRelationValue($key)
-                    : $this->throwMissingAttributeExceptionIfApplicable($key);
-    }
-
-    /**
-     * Either throw a missing attribute exception or
-     * return null depending on Orm's configuration.
-     *
-     * @param  string  $key
-     * @return null
-     *
-     * @throws \FluentSupport\Framework\Database\Orm\MissingAttributeException
-     */
-    protected function throwMissingAttributeExceptionIfApplicable($key)
-    {
-        if (
-            $this->exists &&
-            ! $this->wasRecentlyCreated &&
-            static::preventsAccessingMissingAttributes()
-        ) {
-            throw new MissingAttributeException($this, $key);
-        }
-
-        return null;
+        return $this->getRelationValue($key);
     }
 
     /**
@@ -497,9 +446,7 @@ trait HasAttributes
      */
     public function getAttributeValue($key)
     {
-        return $this->transformModelValue(
-            $key, $this->getAttributeFromArray($key)
-        );
+        return $this->transformModelValue($key, $this->getAttributeFromArray($key));
     }
 
     /**
@@ -532,7 +479,7 @@ trait HasAttributes
             return;
         }
 
-        if ($this->preventsLazyLoading()) {
+        if ($this->preventsLazyLoading) {
             $this->handleLazyLoadingViolation($key);
         }
 
@@ -566,7 +513,11 @@ trait HasAttributes
      */
     protected function handleLazyLoadingViolation($key)
     {
-        if (!$this->exists || $this->wasRecentlyCreated) {
+        if (isset(static::$lazyLoadingViolationCallback)) {
+            return call_user_func(static::$lazyLoadingViolationCallback, $this, $key);
+        }
+
+        if (! $this->exists || $this->wasRecentlyCreated) {
             return;
         }
 
@@ -585,7 +536,7 @@ trait HasAttributes
     {
         $relation = $this->$method();
 
-        if (!$relation instanceof Relation) {
+        if (! $relation instanceof Relation) {
             if (is_null($relation)) {
                 throw new LogicException(sprintf(
                     '%s::%s must return a relationship instance, but "null" was returned. Was the "return" keyword used?', static::class, $method
@@ -1151,7 +1102,7 @@ trait HasAttributes
     {
         $enumClass = $this->getCasts()[$key];
 
-        if (is_null($value)) {
+        if (! isset($value)) {
             $this->attributes[$key] = null;
         } elseif ($value instanceof $enumClass) {
             $this->attributes[$key] = $value->value;
@@ -1557,19 +1508,19 @@ trait HasAttributes
      */
     protected function isEnumCastable($key)
     {
-        $casts = $this->getCasts();
-
-        if (! array_key_exists($key, $casts)) {
+        if (! array_key_exists($key, $this->getCasts())) {
             return false;
         }
 
-        $castType = $casts[$key];
+        $castType = $this->getCasts()[$key];
 
-        if (in_array($castType, static::$primitiveCastTypes, true)) {
+        if (in_array($castType, static::$primitiveCastTypes)) {
             return false;
         }
 
-        return function_exists('enum_exists') && enum_exists($castType);
+        if (function_exists('enum_exists') && enum_exists($castType)) {
+            return true;
+        }
     }
 
     /**
@@ -2158,9 +2109,6 @@ trait HasAttributes
             }
 
             return false;
-        })
-        ->map(fn($method) => $method->name)
-        ->values()
-        ->all();
+        })->map->name->values()->all();
     }
 }

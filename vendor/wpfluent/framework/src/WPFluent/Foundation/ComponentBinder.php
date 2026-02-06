@@ -2,34 +2,27 @@
 
 namespace FluentSupport\Framework\Foundation;
 
-use FluentSupport\Framework\Support\Arr;
+use FluentSupport\Framework\Support\Str;
 use FluentSupport\Framework\View\View;
-use FluentSupport\Framework\Cache\Cache;
 use FluentSupport\Framework\Http\URL;
-use FluentSupport\Framework\Support\Mail;
-use FluentSupport\Framework\Support\Pipeline;
 use FluentSupport\Framework\Http\Router;
-use FluentSupport\Framework\Http\Request\Request;
-use FluentSupport\Framework\Http\Response\Response;
+use FluentSupport\Framework\Support\Facade;
+use FluentSupport\Framework\Support\Pipeline;
+use FluentSupport\Framework\Request\Request;
+use FluentSupport\Framework\Response\Response;
 use FluentSupport\Framework\Events\Dispatcher;
-use FluentSupport\Framework\Encryption\Encrypter;
 use FluentSupport\Framework\Database\Orm\Model;
 use FluentSupport\Framework\Validator\Validator;
 use FluentSupport\Framework\Foundation\RequestGuard;
-use FluentSupport\Framework\Database\DatabaseManager;
-use FluentSupport\Framework\Database\DatabaseTransactionsManager;
 use FluentSupport\Framework\Database\ConnectionResolver;
 use FluentSupport\Framework\Database\Query\WPDBConnection;
 use FluentSupport\Framework\Pagination\AbstractCursorPaginator;
 use FluentSupport\Framework\Pagination\AbstractPaginator;
 use FluentSupport\Framework\Pagination\CursorPaginator;
 use FluentSupport\Framework\Pagination\Cursor;
-use WpOrg\Requests\Exception\Http\Status401;
 
 class ComponentBinder
 {
-    use Concerns\DynamicFacadeTrait;
-
     /**
      * The application instance
      * @var \FluentSupport\Framework\Foundation\Application
@@ -41,17 +34,14 @@ class ComponentBinder
      * @var array
      */
     protected $bindables = [
-        'Cache',
         'Request',
         'Response',
         'Validator',
         'View',
         'Events',
-        'Encrypter',
         'DB',
         'URL',
         'Router',
-        'Mail',
         'Paginator',
         'Pipeline',
     ];
@@ -85,17 +75,6 @@ class ComponentBinder
         $this->registerResolvingEvent($this->app);
     }
 
-    public function resolveDatabaseTransactionsManager()
-    {
-        if (!$this->app->bound('db.transactions')) {
-            $this->app->singleton('db.transactions', function ($app) {
-                return new DatabaseTransactionsManager;
-            });
-        }
-
-        return $this->app->make('db.transactions');
-    }
-
     /**
      * Register resolving event into the container.
      * @param  \FluentSupport\Framework\Foundation\Application $app
@@ -104,32 +83,80 @@ class ComponentBinder
     protected function registerResolvingEvent($app)
     {
         $app->resolving(RequestGuard::class, function($request) use ($app) {
-            
-            $request->setRequestInstance($app->request);
 
             if (method_exists($request, 'authorize')) {
-                if(!$request->authorize()) throw new Status401;
+                !$request->authorize() && $request->abort(401);
             }
 
-            $request->merge((array) $request->beforeValidation());
+            $request->merge($request->beforeValidation());
             $request->validate();
-            $request->merge((array) $request->afterValidation(
-                $request->getValidator()
-            ));
+            $request->merge($request->afterValidation());
         });
     }
 
     /**
-     * Bind the cache instance into the container.
+     * Register the dynamic facade resolver.
+     * @param  \FluentSupport\Framework\Foundation\Application $app
      * @return null
      */
-    protected function bindCache()
+    protected function registerFacadeResolver($app)
     {
-        $this->app->singleton(Cache::class, function ($app) {
-            return Cache::init();
-        });
+        Facade::setFacadeApplication($app);
+ 
+        spl_autoload_register(function($class) use ($app) {
 
-        $this->app->alias(Cache::class, 'cache');
+            $ns = substr(($fqn = __NAMESPACE__), 0, strpos($fqn, '\\'));
+
+            if (Str::contains($class, ($facade = $ns.'\Facade'))) {
+
+                $this->createFacadeFor($facade, $class, $app);
+            }
+        });
+    }
+
+    /**
+     * Create a facade resolver class dynamically
+     * @param  string $facade
+     * @param  string $class
+     * @param  \FluentSupport\Framework\Foundation\Application $app
+     * @return null
+     */
+    protected function createFacadeFor($facade, $class, $app)
+    {
+        $facadeAccessor = $this->resolveFacadeAccessor($facade, $class, $app);
+
+        $anonymousClass = new class($facadeAccessor) extends Facade {
+
+            protected static $facadeAccessor;
+
+            public function __construct($facadeAccessor) {
+                static::$facadeAccessor = $facadeAccessor;
+            }
+
+            protected static function getFacadeAccessor() {
+                return static::$facadeAccessor;
+            }
+        };
+
+        class_alias(get_class($anonymousClass), $class, true);
+    }
+
+    /**
+     * Resolve the binding name.
+     * @param  string $facade
+     * @param  string $class
+     * @param  \FluentSupport\Framework\Foundation\Application $app
+     * @return string
+     */
+    protected function resolveFacadeAccessor($facade, $class,$app)
+    {
+        $name = strtolower(trim(str_replace($facade, '', $class), '\\'));
+        
+        if ($name == 'route') $name = 'router';
+
+        if ($app->bound($name)) {
+            return $name;
+        }
     }
 
     /**
@@ -138,15 +165,11 @@ class ComponentBinder
      */
     protected function bindRequest()
     {
-        $method = $this->getBindingMethod('singleton');
-
-        $this->app->$method(Request::class, function ($app) {
-            return $this->resolveRequest($app);
+        $this->app->singleton(Request::class, function ($app) {
+            return new Request($app, $_GET, $_POST, $_FILES);
         });
 
         $this->app->alias(Request::class, 'request');
-
-        $this->addBackwardCompatibleAlias(Request::class);
     }
 
     /**
@@ -155,30 +178,11 @@ class ComponentBinder
      */
     protected function bindResponse()
     {
-        $method = $this->getBindingMethod('singleton');
-
-        $this->app->$method(Response::class, function($app) {
+        $this->app->singleton(Response::class, function($app) {
             return new Response($app);
         });
 
         $this->app->alias(Response::class, 'response');
-        
-        $this->addBackwardCompatibleAlias(Response::class);
-    }
-
-    /**
-     * Get the binding method to bind a component.
-     * In the testing environment, we use bind
-     * method instead of singleton method.
-     * 
-     * @param  string $original
-     * @return string
-     */
-    protected function getBindingMethod($original)
-    {
-        return str_starts_with(
-            $this->app->env(), 'testing'
-        ) ? 'bind' : $original;
     }
 
     /**
@@ -214,26 +218,10 @@ class ComponentBinder
     protected function bindEvents()
     {
         $this->app->singleton(Dispatcher::class, function($app) {
-            return (new Dispatcher($app))->setTransactionManagerResolver(
-                fn () => $this->resolveDatabaseTransactionsManager()
-            );
+            return new Dispatcher($app);
         });
 
         $this->app->alias(Dispatcher::class, 'events');
-    }
-
-    /**
-     * Bind the encrypter instance into the container.
-     * @return null
-     */
-    protected function bindEncrypter()
-    {
-        $this->app->singleton(Encrypter::class, function($app) {
-            return new Encrypter($app->config->get('app.key'));
-        });
-
-        $this->app->alias(Encrypter::class, 'encrypter');
-        $this->app->alias(Encrypter::class, 'crypt');
     }
 
     /**
@@ -242,39 +230,26 @@ class ComponentBinder
      */
     protected function bindDB()
     {
-        $connection = new WPDBConnection($GLOBALS['wpdb']);
-
-        $resolver = new ConnectionResolver([
-            'mysql' => $connection,
-            'sqlite' => $connection,
-        ]);
-
-        $resolver->setDefaultConnection('mysql');
-
-        $resolver->connection()->setTransactionManager(
-            $this->resolveDatabaseTransactionsManager()
-        );
-
-        Model::setConnectionResolver($resolver);
-        
-        Model::setEventDispatcher($this->app['events']);
-
-        $this->app->singletonIf('db', function($app) use ($resolver) {
-            return new DatabaseManager($resolver);
+        $this->app->singleton('db', function($app) {
+            return new WPDBConnection(
+                $GLOBALS['wpdb'], $app->config->get('database')
+            );
         });
+
+        Model::setEventDispatcher($this->app['events']);
+        
+        Model::setConnectionResolver(new ConnectionResolver);
     }
 
     /**
-     * Bind the Url instance into the container.
+     * Bind the URL instance into the container.
      * @return null
      */
-    protected function bindUrl()
+    protected function bindURL()
     {
-        $this->app->bind(URL::class, function($app) {
-            return new URL($app->make(Encrypter::class));
+        $this->app->bind('url', function($app) {
+            return new URL;
         });
-
-        $this->app->alias(URL::class, 'url');
     }
 
     /**
@@ -283,24 +258,9 @@ class ComponentBinder
      */
     protected function bindRouter()
     {
-        $this->app->singleton(Router::class, function($app) {
+        $this->app->singleton('router', function($app) {
             return new Router($app);
         });
-
-        $this->app->alias(Router::class, 'router');
-    }
-
-    /**
-     * Bind the mail instance into the container.
-     * @return null
-     */
-    protected function bindMail()
-    {
-        $this->app->bind(Mail::class, function($app) {
-            return new Mail();
-        });
-
-        $this->app->alias(Mail::class, 'mail');
     }
 
     /**
@@ -342,7 +302,7 @@ class ComponentBinder
             return new Pipeline($app);
         });
 
-        $this->app->alias(Pipeline::class, 'pipeline');  
+        $this->app->alias(Pipeline::class, 'pipeline');    
     }
 
     /**
@@ -373,85 +333,5 @@ class ComponentBinder
         if (is_readable($globals)) {
             require_once $globals;
         }
-    }
-
-    /**
-     * Adds new alias to maintain the backward compatibility.
-     *
-     * @param string $class
-     * @return void
-     */
-    protected function addBackwardCompatibleAlias($class)
-    {
-        $this->app->alias(
-            $class, $alias = $this->getAlias($class)
-        );
-
-        if (!class_exists($alias)) {
-            class_alias($class, $alias);
-        }
-    }
-
-    /**
-     * Resolves the backward compatible alias.
-     * 
-     * @param string $class
-     * @return string New alias
-     */
-    protected function getAlias($class)
-    {
-        $pieces = explode('\\', $class);
-        
-        if ($index = Arr::findPath($pieces, 'Http')) {
-            unset($pieces[$index]);
-        }
-        
-        return implode('\\', $pieces);
-    }
-
-    /**
-     * Resolve the appropriate request instance.
-     * 
-     * @param  $app
-     * @return Request|object (Anonymous Class)
-     */
-    protected function resolveRequest($app)
-    {
-        return new Request($app, $_GET, $_POST);
-    }
-
-    /**
-     * Check if the request is of the plugin.
-     * 
-     * @return boolean
-     */
-    protected function isRequestOfPlugin()
-    {
-        if (str_starts_with($this->app->env(), 'testing')) {
-            return true;
-        }
-
-        $slug = $this->app->config->get('app.slug');
-
-        if (get_option('permalink_structure')) {
-            $route = $_SERVER['REQUEST_URI'] ?? '';
-        } else {
-            $route = $_GET['rest_route'] ?? '';
-        }
-
-        $parsedUrl = parse_url($route);
-
-        $path = $parsedUrl['path'] ?? '';
-
-        $path = str_replace('/wp-json', '', $path);
-
-        if (is_admin()) {
-            $page = $_GET['page'] ?? '';
-            if ($slug === $page) {
-                $path = $page;
-            }
-        }
-
-        return str_starts_with(ltrim($path, '/'), $slug);
     }
 }

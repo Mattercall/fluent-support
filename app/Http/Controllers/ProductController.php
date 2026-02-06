@@ -4,7 +4,7 @@ namespace FluentSupport\App\Http\Controllers;
 
 use FluentSupport\App\Http\Requests\ProductRequest;
 use FluentSupport\App\Models\Product;
-use FluentSupport\Framework\Http\Request\Request;
+use FluentSupport\Framework\Request\Request;
 
 class ProductController extends Controller
 {

@@ -429,7 +429,6 @@ class Conversation extends Model
 
         if (!PermissionManager::currentUserCan($permissionKey) && $ticketAgentId !== $agentId) {
             throw new \Exception(
-                // translators: %s is the action being performed (e.g., "view", "edit", "delete")
                 esc_html(sprintf(__('Sorry, you do not have permission to %s this response.', 'fluent-support'), $task))
             );
         }
