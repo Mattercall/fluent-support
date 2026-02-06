@@ -19,4 +19,15 @@ define('FLUENT_SUPPORT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
 require __DIR__ . '/vendor/autoload.php';
 
-(new \FluentSupport\App\Services\PluginLoader\UnifiedBootstrap())->boot(__FILE__);
+call_user_func(function ($bootstrap) {
+    $bootstrap(__FILE__);
+}, require(__DIR__ . '/boot/app.php'));
+
+
+add_action('wp_insert_site', function ($new_site) {
+    if (is_plugin_active_for_network('fluent-support/fluent-support.php')) {
+        switch_to_blog($new_site->blog_id);
+        (new \FluentSupport\App\Hooks\Handlers\ActivationHandler)->handle(false);
+        restore_current_blog();
+    }
+});
