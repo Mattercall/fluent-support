@@ -1225,14 +1225,23 @@ class Ticket extends Model
     {
         $content = (string) $content;
 
-        // 500KB default threshold; configurable for edge-cases.
-        $maxClickableBytes = (int) apply_filters('fluent_support/max_clickable_content_bytes', 500000);
+        // Keep the threshold conservative because this method runs for every
+        // response on ticket-view and `make_clickable()` is regex-heavy.
+        $maxClickableBytes = (int) apply_filters('fluent_support/max_clickable_content_bytes', 100000);
 
-        if ($maxClickableBytes > 0 && strlen($content) > $maxClickableBytes) {
-            return wpautop($content, false);
+        $autopContent = wpautop($content, false);
+
+        // Skip expensive URL parsing for plain text blocks that don't contain
+        // obvious link markers.
+        if (!preg_match('/(?:https?:\/\/|www\.)/i', $content)) {
+            return $autopContent;
         }
 
-        return links_add_target(make_clickable(wpautop($content, false)));
+        if ($maxClickableBytes > 0 && strlen($content) > $maxClickableBytes) {
+            return $autopContent;
+        }
+
+        return links_add_target(make_clickable($autopContent));
     }
 
 
