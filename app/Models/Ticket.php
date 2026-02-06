@@ -1225,19 +1225,35 @@ class Ticket extends Model
     {
         $content = (string) $content;
 
-        // Keep the threshold conservative because this method runs for every
+        if ($content === '') {
+            return '';
+        }
+
+        $contentLength = strlen($content);
+
+        // Very large bodies (copied logs, payload dumps, forwarded chains etc.)
+        // can make `wpautop()` and `make_clickable()` expensive. Bail out early
+        // and render raw content to keep the admin UI responsive.
+        $maxFormattedBytes = (int) apply_filters('fluent_support/max_formatted_content_bytes', 150000);
+
+        if ($maxFormattedBytes > 0 && $contentLength > $maxFormattedBytes) {
+            return $content;
+        }
+
+        // Keep this threshold strict because this method runs for every
         // response on ticket-view and `make_clickable()` is regex-heavy.
-        $maxClickableBytes = (int) apply_filters('fluent_support/max_clickable_content_bytes', 100000);
+        $maxClickableBytes = (int) apply_filters('fluent_support/max_clickable_content_bytes', 25000);
 
         $autopContent = wpautop($content, false);
 
-        // Skip expensive URL parsing for plain text blocks that don't contain
-        // obvious link markers.
-        if (!preg_match('/(?:https?:\/\/|www\.)/i', $content)) {
+        // Skip URL parsing when there is no obvious marker, or when this looks
+        // like an HTML block. This avoids unnecessary regex work and prevents
+        // repeated parsing of large HTML email bodies.
+        if (strpbrk($content, './:') === false || strpos($content, '<') !== false) {
             return $autopContent;
         }
 
-        if ($maxClickableBytes > 0 && strlen($content) > $maxClickableBytes) {
+        if ($maxClickableBytes > 0 && $contentLength > $maxClickableBytes) {
             return $autopContent;
         }
 
