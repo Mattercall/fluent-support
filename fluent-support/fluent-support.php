@@ -17,6 +17,11 @@ define('FLUENT_SUPPORT_UPLOAD_DIR', 'fluent-support');
 define('FLUENT_SUPPORT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('FLUENT_SUPPORT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
+define('FLUENT_SUPPORT_PRO_PLUGIN_PATH', FLUENT_SUPPORT_PLUGIN_PATH . 'pro/');
+define('FLUENT_SUPPORT_PRO_PLUGIN_URL', FLUENT_SUPPORT_PLUGIN_URL . 'pro/');
+
+require_once FLUENT_SUPPORT_PRO_PLUGIN_PATH . 'fluent-support-pro.php';
+
 require __DIR__ . '/vendor/autoload.php';
 
 call_user_func(function ($bootstrap) {
@@ -28,6 +33,16 @@ add_action('wp_insert_site', function ($new_site) {
     if (is_plugin_active_for_network('fluent-support/fluent-support.php')) {
         switch_to_blog($new_site->blog_id);
         (new \FluentSupport\App\Hooks\Handlers\ActivationHandler)->handle(false);
+        restore_current_blog();
+    }
+});
+
+register_activation_hook(__FILE__, array('FluentSupportPro\Database\DBMigrator', 'run'));
+
+add_action('wp_insert_site', function ($new_site) {
+    if (is_plugin_active_for_network('fluent-support/fluent-support.php')) {
+        switch_to_blog($new_site->blog_id);
+        \FluentSupportPro\Database\DBMigrator::run(false);
         restore_current_blog();
     }
 });
