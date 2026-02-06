@@ -93,8 +93,10 @@ add_action('init', function () {
 
 
 add_action('plugins_loaded', function () {
+    $updaterVersion = defined('FLUENT_SUPPORT_VERSION') ? FLUENT_SUPPORT_VERSION : FLUENTSUPPORTPRO_PLUGIN_VERSION;
+
     $licenseManager = (new \FluentSupportPro\App\Services\PluginManager\FluentLicensing())->register([
-        'version'           => FLUENTSUPPORTPRO_PLUGIN_VERSION, // Current version of your plugin
+        'version'           => $updaterVersion, // Current version of your plugin
         'item_id'           => 7560869, // Product ID from FluentCart
         'settings_key'      => '__fluentsupport_pro_license',
         'plugin_title'      => 'FluentSupport Pro',
