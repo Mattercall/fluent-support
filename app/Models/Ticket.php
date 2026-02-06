@@ -1168,7 +1168,7 @@ class Ticket extends Model
     private function getTicketAdditionalData($agent, $responses, $ticket, $isCrmProfileRequested = false)
     {
         foreach ($responses as $response) {
-            $response->content = links_add_target(make_clickable(wpautop($response->content, false)));
+            $response->content = $this->formatTicketContentForView($response->content);
             if (!empty($response->ccinfo)) {
                 $val = Helper::safeUnserialize($response->ccinfo->value);
                 if(isset($val['cc_email']) && !empty($val['cc_email'])){
@@ -1181,7 +1181,7 @@ class Ticket extends Model
             }
         }
 
-        $ticket->content = links_add_target(make_clickable(wpautop($ticket->content, false)));
+        $ticket->content = $this->formatTicketContentForView($ticket->content);
 
         //Get last activity by agent
         $ticket->live_activity = TicketHelper::getActivity($ticket->id, $agent->id);
@@ -1210,6 +1210,54 @@ class Ticket extends Model
 
         return $data;
 
+    }
+
+    /**
+     * This formats ticket body content for safe and performant rendering.
+     *
+     * For unusually long payloads we skip `make_clickable()` because it can
+     * cause expensive regex processing and lock up the admin UI.
+     *
+     * @param string $content
+     * @return string
+     */
+    private function formatTicketContentForView($content)
+    {
+        $content = (string) $content;
+
+        if ($content === '') {
+            return '';
+        }
+
+        $contentLength = strlen($content);
+
+        // Very large bodies (copied logs, payload dumps, forwarded chains etc.)
+        // can make `wpautop()` and `make_clickable()` expensive. Bail out early
+        // and render raw content to keep the admin UI responsive.
+        $maxFormattedBytes = (int) apply_filters('fluent_support/max_formatted_content_bytes', 150000);
+
+        if ($maxFormattedBytes > 0 && $contentLength > $maxFormattedBytes) {
+            return $content;
+        }
+
+        // Keep this threshold strict because this method runs for every
+        // response on ticket-view and `make_clickable()` is regex-heavy.
+        $maxClickableBytes = (int) apply_filters('fluent_support/max_clickable_content_bytes', 25000);
+
+        $autopContent = wpautop($content, false);
+
+        // Skip URL parsing when there is no obvious marker, or when this looks
+        // like an HTML block. This avoids unnecessary regex work and prevents
+        // repeated parsing of large HTML email bodies.
+        if (strpbrk($content, './:') === false || strpos($content, '<') !== false) {
+            return $autopContent;
+        }
+
+        if ($maxClickableBytes > 0 && $contentLength > $maxClickableBytes) {
+            return $autopContent;
+        }
+
+        return links_add_target(make_clickable($autopContent));
     }
 
 
@@ -1712,4 +1760,3 @@ class Ticket extends Model
     }
 
 }
-
