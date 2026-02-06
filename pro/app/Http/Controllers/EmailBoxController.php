@@ -21,7 +21,7 @@ class EmailBoxController extends Controller
 
         if ($box->box_type != 'email') {
             return $this->sendError([
-                'message' => __('This is a web type business inbox. No email piping is available', 'fluent-support-pro')
+                'message' => 'This is a web type business inbox. No email piping is available'
             ]);
         }
 
@@ -54,7 +54,7 @@ class EmailBoxController extends Controller
                 $status = $remoteStatus['status'];
             }
         } else {
-            $errorMessage = __('License key could not be found. Please activate Fluent Support license first', 'fluent-support-pro');
+            $errorMessage = 'License Key could not be found. Please Activate Fluent Support License First';
         }
 
         return [
@@ -75,13 +75,13 @@ class EmailBoxController extends Controller
 
         if ($box->box_type != 'email') {
             return $this->sendError([
-                'message' => __('This is a web type business inbox. No email piping is available', 'fluent-support-pro')
+                'message' => 'This is a web type business inbox. No email piping is available'
             ]);
         }
 
         if ($box->mapped_email) {
             return $this->sendError([
-                'message' => __('Mapped email has already been issued', 'fluent-support-pro')
+                'message' => 'Mapped email has been already issued'
             ]);
         }
 
@@ -117,7 +117,7 @@ class EmailBoxController extends Controller
         }
 
         return [
-            'message'    => __('Mailbox mapped email has been generated', 'fluent-support-pro'),
+            'message'    => 'Mailbox mapped email has been generated',
             'email_pipe' => $response
         ];
     }
@@ -132,7 +132,7 @@ class EmailBoxController extends Controller
 
         if ($this->getBoxSecret($box) != $token) {
             return $this->sendError([
-                'message' => __('Token mismatch', 'fluent-support-pro')
+                'message' => 'Token Mismatch'
             ]);
         }
 

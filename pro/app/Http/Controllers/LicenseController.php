@@ -2,63 +2,51 @@
 
 namespace FluentSupportPro\App\Http\Controllers;
 
-use FluentSupport\Framework\Support\Arr;
-use FluentSupportPro\App\Services\PluginManager\FluentLicensing;
+use FluentSupportPro\App\Services\PluginManager\LicenseManager;
 use FluentSupport\App\Http\Controllers\Controller;
 use FluentSupport\Framework\Request\Request;
 
 class LicenseController extends Controller
 {
-    public function getStatus(Request $request)
+    public function getStatus(Request $request, LicenseManager $licenseManager)
     {
-        $licenseManager = FluentLicensing::getInstance();
-        $data = $licenseManager->getStatus(true);
+        $licenseManager->verifyRemoteLicense(false);
 
-        if (is_wp_error($data)) {
-            $data = [
-                'status'   => $data->get_error_code(),
-                'error'    => true,
-                'message' => $data->get_error_message(),
-            ];
+
+        $data = $licenseManager->getLicenseDetails();
+
+        $status = $data['status'];
+
+        if($status == 'expired') {
+            $data['renew_url'] = $licenseManager->getRenewUrl($data['license_key']);
         }
 
-        $status = Arr::get($data, 'status');
-
-        if ($status == 'expired') {
-            $data['renew_url'] = $licenseManager->getRenewUrl();
-        }
-
-        $data['purchase_url'] = $licenseManager->getConfig('purchase_url');
+        $data['purchase_url'] = $licenseManager->getVar('purchase_url');
 
         unset($data['license_key']);
         return $data;
+
     }
 
-    public function saveLicense(Request $request)
+    public function saveLicense(Request $request, LicenseManager $licenseManager)
     {
-        $licenseManager = FluentLicensing::getInstance();
         $licenseKey = $request->get('license_key');
-
-        $response = $licenseManager->activate($licenseKey);
-        if (is_wp_error($response)) {
+        $response = $licenseManager->activateLicense($licenseKey);
+        if(is_wp_error($response)) {
             return $this->sendError([
                 'message' => $response->get_error_message()
             ]);
         }
-
         return [
             'license_data' => $response,
-            'message'      => __('Your license key has been successfully updated', 'fluent-support-pro')
+            'message' => __('Your license key has been successfully updated', 'fluent-support-pro')
         ];
     }
 
-    public function deactivateLicense(Request $request)
+    public function deactivateLicense(Request $request,  LicenseManager $licenseManager)
     {
-
-        $licenseManager = FluentLicensing::getInstance();
-
-        $response = $licenseManager->deactivate();
-        if (is_wp_error($response)) {
+        $response = $licenseManager->deactivateLicense();
+        if(is_wp_error($response)) {
             return $this->sendError([
                 'message' => $response->get_error_message()
             ]);
@@ -68,8 +56,9 @@ class LicenseController extends Controller
 
         return [
             'license_data' => $response,
-            'message'      => __('Your license key has been successfully deactivated', 'fluent-support-pro')
+            'message' => __('Your license key has been successfully deactivated', 'fluent-support-pro')
         ];
+
     }
 
 }

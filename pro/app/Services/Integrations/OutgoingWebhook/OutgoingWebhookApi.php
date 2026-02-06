@@ -16,8 +16,7 @@ class OutgoingWebhookApi
                 'Content-Type' => $type
             ]
         ];
-
-        $response = wp_safe_remote_post($url, $payload);
+        $response = wp_remote_post($url, $payload);
 
         if (is_wp_error($response)) {
             return $response;
@@ -25,7 +24,7 @@ class OutgoingWebhookApi
 
         return [
             'status'  => 'success',
-            'message' => __('Webhook triggered successfully', 'fluent-support-pro')
+            'message' => 'Webhook triggered successfully'
         ];
     }
 }

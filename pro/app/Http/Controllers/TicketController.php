@@ -72,7 +72,7 @@ class TicketController extends Controller
         $bookmarkService->addBookmarks( $watchers, $ticket_id );
 
         return [
-            'message' => __('Watchers have been added to this ticket', 'fluent-support-pro'),
+            'message' => __('Watchers has been added to this ticket', 'fluent-support-pro'),
         ];
     }
 

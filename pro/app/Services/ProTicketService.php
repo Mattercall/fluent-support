@@ -38,7 +38,7 @@ class ProTicketService extends TicketService
 
         if(count($sortedTicketIds) === count($completedTickets)){
             return [
-                'message' => __('Tickets have been merged', 'fluent-support-pro')
+                'message' => __('Tickets has been merged', 'fluent-support-pro')
             ];
         }
     }
@@ -85,7 +85,7 @@ class ProTicketService extends TicketService
         $ticketCarbonCopy = Meta::where('object_type', 'customer_cc_info')->where('object_id', $fromTicketId)->first();
         //If there is any carbon copy user then sync it with the current ticket
         if($ticketCarbonCopy){
-            $ticketFollowerData = ProHelper::safeUnserialize($ticketCarbonCopy->value);
+            $ticketFollowerData = Helper::safeUnserialize($ticketCarbonCopy->value);
             $toTicket->syncCarbonCopyCustomer($ticketFollowerData, $toTicket->id);
         }
     }
@@ -103,7 +103,7 @@ class ProTicketService extends TicketService
         }
 
         return [
-            'message' => __('Watchers have been updated', 'fluent-support-pro')
+            'message' => __('Watchers has been updated', 'fluent-support-pro')
         ];
     }
 
@@ -113,7 +113,7 @@ class ProTicketService extends TicketService
 
         unset($data['conversation_id']);
 
-        $this->checkPermission('fst_split_ticket', __('You do not have permission to split tickets', 'fluent-support-pro'));
+        $this->checkPermission('fst_split_ticket', 'You do not have permission to split tickets');
 
         do_action('fluent_support/before_ticket_split', $actualTicketId, $conversationId, $data);
 
@@ -140,7 +140,7 @@ class ProTicketService extends TicketService
                 'conversation_type' => 'ticket_split_activity',
                 'ticket_id' => $newTicketId,
                 'person_id' => $agentId,
-                'content' => sprintf(__('Ticket #%s has been split from #%s at %s', 'fluent-support-pro'),  $newTicketId, $oldTicketId, current_time('mysql'))
+                'content' => sprintf(__('Ticket #%s has been splited from #%s at %s', 'fluent-support-pro'),  $newTicketId, $oldTicketId, current_time('mysql'))
             ]
         );
 
@@ -149,7 +149,7 @@ class ProTicketService extends TicketService
                 'conversation_type' => 'ticket_split_activity',
                 'ticket_id' => $oldTicketId,
                 'person_id' => $agentId,
-                'content' => sprintf(__('Conversation #%s has been split as a new ticket #%s at %s', 'fluent-support-pro'),  $conversationId, $newTicketId, current_time('mysql'))
+                'content' => sprintf(__('Conversation #%s has been splited as a new ticket at #%s at %s', 'fluent-support-pro'),  $conversationId, $newTicketId, current_time('mysql'))
             ]
         );
     }
@@ -208,7 +208,7 @@ class ProTicketService extends TicketService
         ])->first();
 
         if ($estimatedTime) {
-            return ProHelper::safeUnserialize($estimatedTime->value ?: []);
+            return Helper::safeUnserialize($estimatedTime->value ?: []);
         }
 
         return null;

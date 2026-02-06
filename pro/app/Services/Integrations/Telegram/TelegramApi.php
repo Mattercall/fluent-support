@@ -163,7 +163,7 @@ class TelegramApi
             return new \WP_Error($response->get_error_code(), $response->get_error_message());
         }
 
-        return json_decode(wp_remote_retrieve_body($response), true);
+        return json_decode(wp_remote_retrieve_body($response));
     }
 
     public function getBotWebhookInfo()

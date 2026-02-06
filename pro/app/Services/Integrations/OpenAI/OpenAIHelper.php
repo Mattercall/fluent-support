@@ -7,7 +7,6 @@ use FluentSupportPro\App\Services\Integrations\OpenAI\OpenAIAPI;
 use FluentSupport\App\Models\Meta;
 use FluentSupport\App\Models\AIActivityLogs;
 use FluentSupport\Framework\Support\Arr;
-use FluentSupportPro\App\Services\ProHelper;
 
 class OpenAIHelper
 {
@@ -140,7 +139,7 @@ class OpenAIHelper
     private function metaData()
     {
         $metaValue = Meta::where('object_type', '_fs_openai_settings')->value('value');
-        return ProHelper::safeUnserialize($metaValue);
+        return Helper::safeUnserialize($metaValue);
     }
 
     /**

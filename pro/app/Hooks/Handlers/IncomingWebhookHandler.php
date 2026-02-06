@@ -7,7 +7,6 @@ use FluentSupport\App\Models\Meta;
 use FluentSupport\App\Services\Helper;
 use FluentSupport\Framework\Support\Arr;
 use FluentSupportPro\App\Services\Integrations\FluentEmailPiping\ByMailHandler;
-use FluentSupportPro\App\Services\ProHelper;
 
 class IncomingWebhookHandler extends ByMailHandler
 {
@@ -23,7 +22,7 @@ class IncomingWebhookHandler extends ByMailHandler
         $token = sanitize_text_field(Arr::get($postData, 'token'));
         if (empty($token)) {
             wp_send_json_error([
-                'message' => __('Webhook token not found', 'fluent-support-pro'),
+                'message' => 'Webhook token not found',
                 'type'    => 'empty_webhook_token'
             ], 423);
         }
@@ -32,7 +31,7 @@ class IncomingWebhookHandler extends ByMailHandler
 
         if (!$webhook || !Arr::get($postData, 'sender.email') || !is_email(Arr::get($postData, 'sender.email'))) {
             wp_send_json_error([
-                'message' => __('Invalid Webhook URL or email does not exist', 'fluent-support-pro'),
+                'message' => 'Invalid Webhook URL or Email does not exist',
                 'type'    => 'invalid_webhook_url'
             ], 423);
         }
@@ -41,7 +40,7 @@ class IncomingWebhookHandler extends ByMailHandler
         $mailboxId = Arr::get($postData, 'mailbox_id', 0);
 
         if(!$mailboxId){
-            $webhookData = ProHelper::safeUnserialize($webhook->value);
+            $webhookData = Helper::safeUnserialize($webhook->value);
             $mailboxId = (is_array($webhookData) && isset($webhookData['mailbox'])) ? $webhookData['mailbox'] : 0;
         }
 

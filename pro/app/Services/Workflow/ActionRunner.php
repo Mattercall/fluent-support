@@ -106,8 +106,8 @@ class ActionRunner
 
         // Support for shortcode parsing
         $data = apply_filters('fluent_support/parse_smartcode_data', $data, [
-            'customer' => $this->ticket->customer,
-            'agent'    => $agent
+            'customer'  => $this->ticket->customer,
+            'agent'     => $agent
         ]);
 
         (new ResponseService())->createResponse($data, $agent, $this->ticket);
@@ -246,7 +246,7 @@ class ActionRunner
             $lastResponse = $ticket->getLastAgentResponse();
 
             if ($lastResponse) {
-                $lastResponseArray = (array)$lastResponse;
+                $lastResponseArray = (array) $lastResponse;
                 $keys = (new Conversation())->getFillable();
                 $keys[] = 'created_at';
                 $keys[] = 'updated_at';
@@ -259,7 +259,7 @@ class ActionRunner
         if (in_array('last_response', $includedData)) {
             $lastResponse = $this->ticket->getLastResponse();
             if ($lastResponse) {
-                $lastResponseArray = (array)$lastResponse;
+                $lastResponseArray = (array) $lastResponse;
                 $keys = (new Conversation())->getFillable();
                 $keys[] = 'id';
                 $keys[] = 'created_at';
@@ -324,7 +324,7 @@ class ActionRunner
 
     private function triggerAttachCrmTags($action)
     {
-        if (defined('FLUENTCRM')) {
+        if(defined('FLUENTCRM')) {
             $settings = $action->settings;
             $lists = Arr::get($settings, 'tag_ids');
 
@@ -332,7 +332,7 @@ class ActionRunner
 
             $crmContact = \FluentCrmApi('contacts')->getContact($customerEmail);
 
-            if ($crmContact) {
+            if($crmContact) {
                 return $crmContact->attachTags($lists);
             }
         }
@@ -348,7 +348,7 @@ class ActionRunner
 
             $crmContact = \FluentCrmApi('contacts')->getContact($customerEmail);
 
-            if ($crmContact) {
+            if($crmContact) {
                 return $crmContact->attachLists($lists);
             }
         }
@@ -364,7 +364,7 @@ class ActionRunner
 
             $crmContact = \FluentCrmApi('contacts')->getContact($customerEmail);
 
-            if ($crmContact) {
+            if($crmContact) {
                 return $crmContact->detachTags($lists);
             }
         }
@@ -372,7 +372,7 @@ class ActionRunner
 
     private function triggerDetachCrmLists($action)
     {
-        if (defined('FLUENTCRM')) {
+        if(defined('FLUENTCRM')) {
             $settings = $action->settings;
             $lists = Arr::get($settings, 'list_ids');
 
@@ -380,38 +380,38 @@ class ActionRunner
 
             $crmContact = \FluentCrmApi('contacts')->getContact($customerEmail);
 
-            if ($crmContact) {
+            if($crmContact) {
                 return $crmContact->detachLists($lists);
             }
         }
     }
 
-    private function triggerAddBookmarks($action)
+    private function triggerAddBookmarks ( $action )
     {
         $settings = $action->settings;
         $bookmarks = Arr::get($settings, 'bookmarks');
 
-        if (!$bookmarks) {
+        if( ! $bookmarks ) {
             return false;
         }
 
         $bookmarkService = new TicketBookmarkService;
 
-        return $bookmarkService->addBookmarks($bookmarks, $this->ticket->id);
+        return $bookmarkService->addBookmarks( $bookmarks, $this->ticket->id );
     }
 
-    private function triggerRemoveBookmarks($action)
+    private function triggerRemoveBookmarks ( $action )
     {
         $settings = $action->settings;
         $bookmarks = Arr::get($settings, 'bookmarks');
 
-        if (!$bookmarks) {
+        if( ! $bookmarks ) {
             return false;
         }
 
         $bookmarkService = new TicketBookmarkService;
 
-        return $bookmarkService->removeBookmarks($bookmarks, $this->ticket->id);
+        return $bookmarkService->removeBookmarks( $bookmarks, $this->ticket->id );
     }
 
     private function triggerChangeMailbox($actions)
@@ -422,7 +422,7 @@ class ActionRunner
             return false;
         }
 
-        $mailbox = Mailbox::find($mailboxId);
+        $mailbox = Mailbox::findOrFail($mailboxId);
 
         if (!$mailbox) {
             return false;
@@ -434,9 +434,9 @@ class ActionRunner
         return true;
     }
 
-    private function triggerCrmAutomation($actions)
+    private function triggerCrmAutomation ($actions)
     {
-        if (defined('FLUENTCRM')) {
+        if(defined('FLUENTCRM')) {
             $autmationId = Arr::get($actions->settings, 'automation_id');
             $automation = Funnel::find($autmationId);
 
@@ -447,14 +447,10 @@ class ActionRunner
             $customerEmail = $this->ticket->customer->email;
             $subscriber = Subscriber::where('email', $customerEmail)->first();
 
-            if (!$subscriber) {
+            if (!$subscriber->exists) {
                 // Create subscriber if it doesn't exist
                 $subscriberData = $this->ticket->customer->toArray();
                 $subscriber = \FluentCrmApi('contacts')->createOrUpdate($subscriberData);
-            }
-
-            if (!$subscriber) {
-                return false;
             }
 
             (new FunnelProcessor())->startFunnelSequence($automation, [], [

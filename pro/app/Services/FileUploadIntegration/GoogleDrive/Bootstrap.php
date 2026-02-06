@@ -27,7 +27,7 @@ class Bootstrap
         $configured = $settings['status'] == 'yes';
 
         $fieldConfig = [
-            'title'       => __('Google Drive File Upload Settings', 'fluent-support-pro'),
+            'title'       => 'Google Drive File Upload Settings',
             'component'   => 'GoogleSettings',
             'description' => sprintf(__('Please %1sread the documentation%2s first to get ClientID and Client Secret'), '<a href="https://fluentsupport.com/docs/google-drive-integration/" rel="noopener" target="_blank">', '</a>'),
             'fields'      => [
@@ -87,7 +87,7 @@ class Bootstrap
             GoogleDriveHelper::updateSettings($settings);
 
             return [
-                'message' => __('Google Drive settings have been saved', 'fluent-support-pro')
+                'message' => __('Google Drive settings has been saved', 'fluent-support-pro')
             ];
         }
 
@@ -135,7 +135,7 @@ class Bootstrap
         }
 
         return [
-            'message' => __('Google API settings have been saved', 'fluent-support-pro')
+            'message' => 'Google API settings has been saved'
         ];
     }
 

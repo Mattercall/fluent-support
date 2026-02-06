@@ -1,9 +1,0 @@
-{
-    "name": "wpmanageinja/fluent-support-pro",
-    "autoload": {
-        "psr-4": {
-            "FluentSupportPro\\App\\": "app/",
-            "FluentSupportPro\\Database\\": "database/"
-        }
-    }
-}

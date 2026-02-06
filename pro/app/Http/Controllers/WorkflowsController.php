@@ -24,7 +24,6 @@ class WorkflowsController extends Controller
     public function index(Request $request)
     {
         $workflows = Workflow::orderBy('id', 'DESC')
-            ->searchBy($request->get('search'))
             ->paginate();
 
         $triggers = WorkflowHelper::getTriggers();
@@ -151,7 +150,7 @@ class WorkflowsController extends Controller
 
         if (!$ticketIds) {
             return $this->sendError([
-                'message' => __('No ticket found', 'fluent-support-pro')
+                'message' => 'No ticket found'
             ]);
         }
 
@@ -159,7 +158,7 @@ class WorkflowsController extends Controller
 
         if ($workflow->status != 'published' || $workflow->trigger_type != 'manual') {
             return $this->sendError([
-                'message' => __('The selected workflow needs to be published and have trigger type manual', 'fluent-support-pro')
+                'message' => 'The selected workflow needs to be published and trigger type manual'
             ]);
         }
 
@@ -167,7 +166,7 @@ class WorkflowsController extends Controller
 
         if ($actions->isEmpty()) {
             return $this->sendError([
-                'message' => __('No actions found for this workflow', 'fluent-support-pro')
+                'message' => 'No Actions found for this workflow'
             ]);
         }
 
@@ -179,7 +178,7 @@ class WorkflowsController extends Controller
 
         if ($tickets->isEmpty()) {
             return $this->sendError([
-                'message' => __('No tickets found based on your permission for this workflow', 'fluent-support-pro')
+                'message' => 'No tickets found based on your permission for this workflow'
             ]);
         }
 
@@ -193,12 +192,12 @@ class WorkflowsController extends Controller
 
         if (!$didRun) {
             return $this->sendError([
-                'message' => __('Actions could not be executed', 'fluent-support-pro')
+                'message' => 'Actions could not be executed'
             ]);
         }
 
         return [
-            'message' => __('Selected workflow actions have been successfully applied', 'fluent-support-pro')
+            'message' => 'Selected workflow actions has been successfully applied'
         ];
 
     }
@@ -228,9 +227,7 @@ class WorkflowsController extends Controller
 
         WorkflowHelper::duplicateActions($workflow, $newWorkflow);
 
-        return [
-            'message' => __('Selected workflow has been duplicated', 'fluent-support-pro')
-        ];
+        return __('Selected workflow has been duplicated');
     }
 
     public function updateActionSequence(Request $request)

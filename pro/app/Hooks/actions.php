@@ -24,6 +24,21 @@ $app->addAction('wp_ajax_fluent_support_export_tickets_timesheet', 'FluentSuppor
 $app->addAction('wp_ajax_fluent_support_export_customers_timesheet', 'FluentSupportPro\App\Hooks\Handlers\DataExporter@exportCustomersTimeSheet', 10, 0);
 $app->addAction('wp_ajax_fluent_support_export_agents_timesheet', 'FluentSupportPro\App\Hooks\Handlers\DataExporter@exportAgentsTimeSheet', 10, 0);
 
+add_action('admin_init', function () {
+    $licenseManager = new \FluentSupportPro\App\Services\PluginManager\LicenseManager();
+    $licenseManager->initUpdater();
+
+    $licenseMessage = $licenseManager->getLicenseMessages();
+
+    if ($licenseMessage) {
+        add_action('admin_notices', function () use ($licenseMessage) {
+            $class = 'notice notice-error fc_message';
+            $message = $licenseMessage['message'];
+            printf('<div class="%1$s"><p>%2$s</p></div>', esc_attr($class), $message);
+        });
+    }
+}, 0);
+
 $app->addAction('fluent_support\tickets_filter_customer', function ($query, $filter) {
     return (new \FluentSupport\App\Models\Ticket())->filterTicketByUser($provider='customer', $query, $filter);
 }, 10, 2);

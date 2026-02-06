@@ -233,7 +233,7 @@ class WorkflowHelper
             return $actions;
         }
 
-        $actionSequence = ProHelper::safeUnserialize($actionSequence->value);
+        $actionSequence = Helper::safeUnserialize($actionSequence->value);
 
         $sortedActions = $actions->sortBy(function ($action) use ($actionSequence) {
             return array_search($action->id, $actionSequence);
@@ -613,7 +613,7 @@ class WorkflowHelper
                 ],
             ];
 
-          $actions = array_merge($actions, $crmActions);
+            return $actions = array_merge($actions, $crmActions);
         }
 
         if ($workFlow->trigger_type == 'manual') {

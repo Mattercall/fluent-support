@@ -65,8 +65,8 @@ class DiscordNotification extends NotificationIntegrationBase
         add_filter('fluent_support/integration_drivers', function ($drivers) {
             $drivers[] = [
                 'key'         => 'discord_settings',
-                'title'       => __('Discord', 'fluent-support-pro'),
-                'description' => __('Send notifications to Discord Channel and keep your support agents more active', 'fluent-support-pro').'<p><a class="fs_doc_link" href="https://fluentsupport.com/docs/managing-tickets-using-discord" rel="noopener" target="_blank">Please read the documentation before you get started</a></p>'
+                'title'       => 'Discord',
+                'description' => __('Send notifications to Discord Channel and keep your support agents more active', 'fluent-support-pro').'<p><a href="https://fluentsupport.com/docs/managing-tickets-using-discord" rel="noopener" target="_blank">Please read the documentation before you get started</a></p>'
             ];
             return $drivers;
         }, 3, 1);
@@ -89,7 +89,7 @@ class DiscordNotification extends NotificationIntegrationBase
     public function getFields()
     {
         return [
-            'title'       => __('Discord Notification Settings', 'fluent-support-pro'),
+            'title'       => 'Discord Notification Settings',
             'fields'      => [
                 'webhook_url'          => [
                     'type'        => 'input-text',

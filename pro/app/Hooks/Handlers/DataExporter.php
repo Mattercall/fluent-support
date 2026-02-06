@@ -187,15 +187,7 @@ class DataExporter
 
     private function sanitizeForCSV($content)
     {
-        if (!is_string($content)) {
-            return $content;
-        }
-
-        $content = str_replace(["\r\n", "\r", "\n"], ' ', $content);
-
-        $content = ltrim($content);
-
-        $formulas = ['=', '-', '+', '@', "\t", ';'];
+        $formulas = ['=', '-', '+', '@', "\t", "\r"];
 
         if (Str::startsWith($content, $formulas)) {
             $content = "'" . $content;

@@ -122,7 +122,7 @@ class Bootstrap
             Helper::updateIntegrationOption('dropbox_settings', $settings);
 
             return [
-                'message'      => __('Dropbox settings have been disconnected', 'fluent-support-pro'),
+                'message'      => __('Dropbox settings has been disconnected', 'fluent-support-pro'),
                 'is_discarted' => true
             ];
         }
@@ -150,7 +150,7 @@ class Bootstrap
         }
 
         return [
-            'message' => __('Dropbox settings have been saved', 'fluent-support-pro')
+            'message' => 'Dropbox settings has been saved'
         ];
     }
 
@@ -243,7 +243,7 @@ class Bootstrap
         $configured = $settings['status'] == 'yes' && Arr::get($allSettings, 'access_token') && Arr::get($allSettings, 'refresh_token');
 
         $fieldConfig = [
-            'title'       => __('Dropbox File Upload Settings', 'fluent-support-pro'),
+            'title'       => 'Dropbox File Upload Settings',
             'component'   => 'DropboxSettings',
             'description' => sprintf(__('Please %1sread the documentation%2s first to get ClientID and Client Secret'), '<a href="https://fluentsupport.com/docs/dropbox-integration/" rel="noopener" target="_blank">', '</a>'),
             'fields'      => [

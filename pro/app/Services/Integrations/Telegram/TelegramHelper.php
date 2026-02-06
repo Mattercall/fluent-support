@@ -126,12 +126,7 @@ class TelegramHelper
             return new \WP_Error('no_ticket_id', 'No Ticket ID found from Payload. '.$ticketId);
         }
 
-        $responseText = Arr::get($payload, 'message.text', '');
-
-        if(!$responseText) {
-            $responseText = '';
-        }
-
+        $responseText = Arr::get($payload, 'message.text');
         $responseText = str_replace('\n', PHP_EOL, $responseText);
 
         $command = '';

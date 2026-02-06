@@ -45,7 +45,7 @@ class SlackApi
         $response = json_decode(wp_remote_retrieve_body($response), true);
 
         if (!$response) {
-            return new \WP_Error('Slack_Error', __('Slack API Request Failed', 'fluent-support-pro'));
+            return new \WP_Error('Slack_Error', 'Slack API Request Failed');
         }
 
         if (!empty($response['error'])) {

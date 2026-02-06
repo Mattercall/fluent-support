@@ -107,51 +107,36 @@ class PMPro
 
     public function getPmMembershipInfo($widgets, $customer)
     {
-        // Ensure email exists
-        if (empty($customer->email)) {
-            return $widgets;
-        }
+        if (!$customer->user_id) return;
 
-        // Get user by email
-        $user = get_user_by('email', $customer->email);
-        if (!$user) {
-            return $widgets;
-        }
+        $levels = pmpro_getMembershipLevelsForUser($customer->user_id);
 
-        // Get PMPro membership levels for user
-        $levels = pmpro_getMembershipLevelsForUser($user->ID);
-        if (empty($levels)) {
-            return $widgets;
-        }
+        if(empty($levels)) return;
 
         $membershipInfo = [];
 
-        foreach ($levels as $level) {
+        foreach ($levels as $level){
             $membershipInfo[] = [
-                'name'      => esc_html($level->name),
-                'startdate' => $level->startdate
-                    ? esc_html(wp_date(get_option('date_format'), (int) $level->startdate))
-                    : '',
+                'name'       => esc_html($level->name),
+                'startdate' => esc_html( wp_date(get_option('date_format'), (int) $level->startdate)),
                 'enddate'   => $level->enddate
-                    ? esc_html(wp_date(get_option('date_format'), (int) $level->enddate))
+                    ? esc_html(wp_date(get_option('date_format'), (int) $level->enddate ))
                     : '',
             ];
         }
-
-        if (empty($membershipInfo)) {
-            return $widgets;
-        }
+        if(empty($membershipInfo)) return;
 
         ob_start();
         ?>
+
         <ul>
-            <?php foreach ($membershipInfo as $info): ?>
-                <li title="<?php echo esc_attr($info['name']); ?>" class="fs_widget_li">
+            <?php foreach ($membershipInfo as $info):?>
+                <li title="<?php $info['name']?>" class="fs_widget_li">
                     <?php
-                    echo '<code>' . __('Level:', 'fluent-support-pro') . '</code> ' . $info['name'] . '<br>';
-                    echo '<code>' . __('Membership Start:', 'fluent-support-pro') . '</code> ' . $info['startdate'] . '<br>';
-                    if ($info['enddate']) {
-                        echo '<code>' . __('Membership End:', 'fluent-support-pro') . '</code> ' . $info['enddate'];
+                    echo '<code>'.__('Level:', 'fluent-support-pro').'</code> '. $info['name'] . '<br>';
+                    echo '<code>'.__('Membership Start:','fluent-support-pro').'</code> '. $info['startdate'] . '<br>';
+                    if($info['enddate']){
+                        echo '<code>'.__('Membership End:', 'fluent-support-pro').'</code> '. $info['enddate'];
                     }
                     ?>
                 </li>
@@ -162,9 +147,8 @@ class PMPro
 
         $widgets['pmpro'] = [
             'header'    => __('Paid Membership Pro', 'fluent-support-pro'),
-            'body_html' => $content,
+            'body_html' => $content
         ];
-
         return $widgets;
     }
 

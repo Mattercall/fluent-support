@@ -34,7 +34,7 @@ class TwilioApi
             }
 
             if (!$response) {
-                return new \WP_Error('twilio_error', __('Twilio API Request Failed', 'fluent-support-pro'));
+                return new \WP_Error('twilio_error', 'Twilio API Request Failed');
             }
         }
 
@@ -49,7 +49,7 @@ class TwilioApi
                 }
 
                 if (!$response) {
-                    return new \WP_Error('twilio_error', __('Twilio API Request Failed', 'fluent-support-pro'));
+                    return new \WP_Error('twilio_error', 'Twilio API Request Failed');
                 }
             }
         }

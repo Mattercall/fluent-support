@@ -10,7 +10,7 @@ class AuthorizeController extends Controller
 {
     public function handleAuthorizeDropbox(Request $request)
     {
-        $code = sanitize_text_field($request->get('code'));
+        $code = $request->get('code');
 
         // Verify the code
         do_action('fluent_support_pro/verify_dropbox_code', $code);
@@ -21,7 +21,7 @@ class AuthorizeController extends Controller
 
     public function handleAuthorizeGoogleDrive(Request $request)
     {
-        $code = sanitize_text_field($request->get('code'));
+        $code = $request->get('code');
        // do_action('fluent_support_pro/verify_google_code', $code);
 
         wp_redirect(admin_url('admin.php?page=fluent-support#/settings/upload_integration_google?code='.$code));

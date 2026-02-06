@@ -36,15 +36,11 @@ class BuddyBoss
 	    }, 10, 1);
 
 	    add_filter('fluent_support/render_custom_field_options_bb_groups', function ($field, $customer) {
-            $groups = [];
-
-            if (function_exists('groups_get_groups')){
+		    if (function_exists('groups_get_groups')){
                 $groups = groups_get_groups();
             }
 
-		    if (!$groups) {
-                return $field;
-            }
+		    if (!$groups) return $field;
 
 		    $groups = $groups['groups'];
 
@@ -71,14 +67,11 @@ class BuddyBoss
 	    }, 10, 2);
 
 	    add_filter('fluent_support/render_custom_field_options_bb_user_groups', function ($field, $customer) {
-            $groupIds = [];
 		    if(function_exists('groups_get_user_groups')){
 			    $groupIds = groups_get_user_groups($customer->user_id);
 		    }
 
-		    if(!$groupIds)  {
-                return $field;
-            }
+		    if(!$groupIds) return $field;
 
 		    $groupIds = $groupIds['groups'];
 
@@ -94,9 +87,7 @@ class BuddyBoss
 				    'title' => $group->name
 			    ];
 		    }
-		    if(!$options) {
-                return $field;
-            }
+		    if(!$options) return $field;
 
 		    $field['type'] = 'select';
 		    $field['filterable'] = true;
@@ -120,8 +111,6 @@ class BuddyBoss
 
 			    if (!$groupId) return $value;
 
-                $group = null;
-
 			    if (function_exists('groups_get_group')) {
 				    $group = groups_get_group( array( 'group_id' => $groupId) );
 			    }
@@ -136,15 +125,11 @@ class BuddyBoss
     public function getBbInfo($widgets, $customer)
     {
 
-        $groupIds = [];
-
 	    if(function_exists('groups_get_user_groups')){
 		    $groupIds = groups_get_user_groups($customer->user_id);
 	    }
 
-        if(empty($groupIds)) {
-            return '';
-        }
+        if(empty($groupIds)) return;
 
         $groupInfos = [];
 
@@ -155,9 +140,7 @@ class BuddyBoss
                 'member_from'   => esc_html(date_i18n(get_option('date_format'), strtotime($group->date_created)))
             ];
         }
-        if (empty($groupInfos)) {
-            return '';
-        }
+        if (empty($groupInfos)) return;
 
         ob_start();
         ?>
@@ -185,8 +168,6 @@ class BuddyBoss
     public function addToWorkflow($customField, $key)
     {
         $options = [];
-
-        $groups = [];
 
         if (function_exists('groups_get_groups')){
             $groups = groups_get_groups();

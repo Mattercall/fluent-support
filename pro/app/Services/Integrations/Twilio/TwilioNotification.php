@@ -64,8 +64,8 @@ class TwilioNotification extends NotificationIntegrationBase
         add_filter('fluent_support/integration_drivers', function ($drivers) {
             $drivers[] = [
                 'key'         => 'twilio_settings',
-                'title'       => __('Twilio', 'fluent-support-pro'),
-                'description' => __('Send notifications to your agents WhatsApp number using twilio and make them more active', 'fluent-support-pro').'<p><a class="fs_doc_link" href="https://fluentsupport.com/docs/whatsapp-integration-via-twilio/" rel="noopener" target="_blank">Please read the documentation before you get started</a></p>'
+                'title'       => 'Twilio',
+                'description' => __('Send notifications to your agents WhatsApp number using twilio and make them more active', 'fluent-support-pro').'<p><a href="https://fluentsupport.com/docs/whatsapp-integration-via-twilio/" rel="noopener" target="_blank">Please read the documentation before you get started</a></p>'
             ];
             return $drivers;
         }, 4, 1);
@@ -171,7 +171,7 @@ class TwilioNotification extends NotificationIntegrationBase
     public function getFields()
     {
         return [
-            'title'       => __('Twilio Settings', 'fluent-support-pro'),
+            'title'       => 'Twilio Settings',
             'fields'      => [
                 'account_sid'     => [
                     'type'        => 'input-text',
@@ -234,8 +234,8 @@ class TwilioNotification extends NotificationIntegrationBase
                 ],
                 'fallback_agent_id' => [
                     'type'        => 'agent-selectors',
-                    'label'       => __('Fallback Agent for reply from WhatsApp message', 'fluent-support-pro'),
-                    'placeholder' => __('Select Fallback Agent', 'fluent-support-pro'),
+                    'label'       => 'Fallback Agent for reply from WhatsApp message',
+                    'placeholder' => 'Select Fallback Agent',
                     'dependency'  => [
                         'depends_on' => 'status',
                         'operator'   => '=',

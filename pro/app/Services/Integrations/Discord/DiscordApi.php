@@ -31,7 +31,7 @@ class DiscordApi
 		}
 
 		if (!$response) {
-			return new \WP_Error('discord_error', __('Discord API Request Failed', 'fluent-support-pro'));
+			return new \WP_Error('discord_error', 'Discord API Request Failed');
 		}
 
 		return $response;

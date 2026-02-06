@@ -25,37 +25,37 @@ class CustomFieldsService
         return apply_filters('fluent_support/custom_field_types', [
             'text'          => [
                 'type'       => 'text',
-                'label'      => __('Single Line Text', 'fluent-support-pro'),
+                'label'      => 'Single Line Text',
                 'value_type' => 'string',
                 'required'   => 'no'
             ],
             'textarea'      => [
                 'type'       => 'textarea',
-                'label'      => __('Multi Line Text', 'fluent-support-pro'),
+                'label'      => 'Multi Line Text',
                 'value_type' => 'string',
                 'required'   => 'no'
             ],
             'number'        => [
                 'type'       => 'number',
-                'label'      => __('Numeric Field', 'fluent-support-pro'),
+                'label'      => 'Numeric Field',
                 'value_type' => 'numeric',
                 'required'   => 'no'
             ],
             'select-one' => [
                 'type'       => 'select-one',
-                'label'      => __('Select Choice', 'fluent-support-pro'),
+                'label'      => 'Select choice',
                 'value_type' => 'string',
                 'required'   => 'no'
             ],
             'radio'         => [
                 'type'       => 'radio',
-                'label'      => __('Radio Choice', 'fluent-support-pro'),
+                'label'      => 'Radio Choice',
                 'value_type' => 'string',
                 'required'   => 'no'
             ],
             'checkbox'      => [
                 'type'       => 'checkbox',
-                'label'      => __('Checkboxes', 'fluent-support-pro'),
+                'label'      => 'Checkboxes',
                 'value_type' => 'array',
                 'required'   => 'no'
             ]
@@ -270,9 +270,9 @@ class CustomFieldsService
             case 'lt':
                 return $submittedValue < $matchValue;
             case 'contains':
-                return strpos((string) $submittedValue, (string)$matchValue) !== false;
+                return strpos($submittedValue, $matchValue) !== false;
             case 'not_contains':
-                return strpos((string)$submittedValue, (string)$matchValue) === false;
+                return strpos($submittedValue, $matchValue) === false;
             case 'in':
                 return in_array($submittedValue, explode(',', $matchValue));
             case 'not_in':

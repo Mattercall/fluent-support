@@ -105,8 +105,8 @@ class SlackNotification extends NotificationIntegrationBase
         add_filter('fluent_support/integration_drivers', function ($drivers) {
             $drivers[] = [
                 'key'         => 'slack_settings',
-                'title'       => __('Slack', 'fluent-support-pro'),
-                'description' => __('Send notifications to Slack Channel and keep your support agents more active', 'fluent-support-pro') . '<p><a class="fs_doc_link" href="https://fluentsupport.com/docs/managing-tickets-using-slack/" rel="noopener" target="_blank">Please read the documentation before you get started</a></p>'
+                'title'       => 'Slack',
+                'description' => __('Send notifications to Slack Channel and keep your support agents more active', 'fluent-support-pro') . '<p><a href="https://fluentsupport.com/docs/managing-tickets-using-slack/" rel="noopener" target="_blank">Please read the documentation before you get started</a></p>'
             ];
             return $drivers;
         }, 2, 1);
@@ -141,7 +141,7 @@ class SlackNotification extends NotificationIntegrationBase
         $slackEventUrl = $this->getWebhookUrl();
 
         return [
-            'title'       => __('Slack Notification Settings', 'fluent-support-pro'),
+            'title'       => 'Slack Notification Settings',
             'fields'      => [
                 'bot_token'         => [
                     'type'        => 'input-text',
@@ -188,7 +188,7 @@ class SlackNotification extends NotificationIntegrationBase
                 'reply_from_html'   => [
                     'type'          => 'html-viewer',
                     'wrapper_class' => 'fs_highlight',
-                    'html'          => '<p>Your support agents can easily reply from slack by replying to slack. </br>Please make sure support agent has slack id set to the profile. <a class="fs_doc_link" href="https://fluentsupport.com/docs/managing-tickets-using-slack" target="_blank">Learn More about this feature</a></p>' . sprintf(__('Please copy this URL %1s%2s%3s to verify your Event Subscriptions in Slack', 'fluent-support-pro'), '<code>', $slackEventUrl, '</code>'),
+                    'html'          => '<p>Your support agents can easily reply from slack by replying to slack. </br>Please make sure support agent has slack id set to the profile. <a href="https://fluentsupport.com/docs/managing-tickets-using-slack" target="_blank">Learn More about this feature</a></p>' . sprintf(__('Please copy this URL %1s%2s%3s to verify your Event Subscriptions in Slack', 'fluent-support-pro'), '<code>', $slackEventUrl, '</code>'),
                     'dependency'    => [
                         'depends_on' => 'reply_from_slack',
                         'operator'   => '=',
@@ -197,8 +197,8 @@ class SlackNotification extends NotificationIntegrationBase
                 ],
                 'fallback_agent_id' => [
                     'type'        => 'agent-selectors',
-                    'label'       => __('Fallback Agent for reply from Slack thread', 'fluent-support-pro'),
-                    'placeholder' => __('Select Fallback Agent', 'fluent-support-pro'),
+                    'label'       => 'Fallback Agent for reply from slack thread',
+                    'placeholder' => 'Select Fallback Agent',
                     'dependency'  => [
                         'depends_on' => 'reply_from_slack',
                         'operator'   => '=',
@@ -523,8 +523,7 @@ class SlackNotification extends NotificationIntegrationBase
 
         $conversionType = 'response';
 
-        $text = Arr::get($event, 'text', '');
-
+        $text = Arr::get($event, 'text');
         if (strpos($text, '#note') !== false || strpos($text, '#internal') !== false) {
             $conversionType = 'note';
             $text = str_replace(['#note', '#internal'], '', $text);

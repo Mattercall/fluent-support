@@ -9,7 +9,6 @@ use FluentSupport\App\Models\Meta;
 use FluentSupport\App\Models\Product;
 use FluentSupport\App\Services\Helper;
 use FluentSupport\Framework\Support\Arr;
-use FluentSupport\Framework\Database\Orm\Collection;
 use FluentSupportPro\App\Models\TimeTrack;
 use FluentSupportPro\App\Services\Integrations\FluentEmailPiping\ByMailHandler;
 
@@ -386,7 +385,7 @@ class ProHelper
             return true;
         }
 
-        $existingValue = static::safeUnserialize($exist->value);
+        $existingValue = Helper::safeUnserialize($exist->value);
 
         $isExits = isset($existingValue[$mime]);
 
@@ -461,18 +460,14 @@ class ProHelper
 
     public static function getTracks(array $dateRange, string $filterColumn, $filterValue, array $relations)
     {
-        try {
-            return TimeTrack::when($filterValue, function ($q) use ($filterColumn, $filterValue) {
-                $q->whereIn($filterColumn, (array)$filterValue);
-            })
-                ->orderBy('updated_at', 'DESC')
-                ->whereBetween('completed_at', $dateRange)
-                ->with($relations)
-                ->whereHas('ticket')
-                ->get();
-        } catch (\Exception $e) {
-            return new Collection([]);
-        }
+        return TimeTrack::when($filterValue, function ($q) use ($filterColumn, $filterValue) {
+            $q->whereIn($filterColumn, (array)$filterValue);
+        })
+            ->orderBy('updated_at', 'DESC')
+            ->whereBetween('completed_at', $dateRange)
+            ->with($relations)
+            ->whereHas('ticket')
+            ->get();
     }
 
     public static function formatTimeSheets($tracks, $itemKey)
@@ -654,20 +649,5 @@ class ProHelper
         $filename = end($path);
         $plugins[$filename] = $key;
         return $plugins;
-    }
-
-    /**
-     * Safely unserialize data.
-     *
-     * @param string $data The serialized data.
-     * @return mixed The unserialized data or the original data if not serialized.
-     */
-    public static function safeUnserialize($data)
-    {
-        if (is_serialized($data)) { // Don't attempt to unserialize data that wasn't serialized going in.
-            return @unserialize(trim($data), ['allowed_classes' => false]);
-        }
-
-        return $data;
     }
 }

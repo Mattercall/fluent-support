@@ -40,7 +40,7 @@ class SavedRepliesController extends Controller
 
         return [
             'reply'   => $reply,
-            'message' => __('Reply Template has been created', 'fluent-support-pro')
+            'message' => 'Reply Template has been created'
         ];
     }
 

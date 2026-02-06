@@ -346,8 +346,6 @@ class ByMailHandler
             $subject = str_replace('#' . $ticketId, '', $subject);
         }
 
-        $subject = sanitize_text_field($subject);
-
         $existingTicket = Ticket::where('customer_id', $customer->id)
             ->where('title', 'like', '%%' . $subject . '%%')
             ->orderBy('ID', 'DESC')
@@ -410,9 +408,9 @@ class ByMailHandler
         return in_array($ticket->customer->email, $ccList);
     }
 
-    private static function isSenderInTheExistingCcList($email, $ccList)
+    private static function isSenderInTheExistingCcList($customer, $ccList)
     {
-        return in_array($email, $ccList);
+        return in_array($customer->email, $ccList);
     }
 
     private static function handleAttachments($attachments, $ticket, $customer, $convo = false)
@@ -488,8 +486,6 @@ class ByMailHandler
 
             if ($dbAttachment->status === 'inline') {
                 if (array_key_exists($attachment['filename'], $inlineImageMapper)) {
-
-                    $attachment['filename'] = sanitize_file_name($attachment['filename']);
 
                     $inlineImages = true;
                     if ($dbAttachment->driver == 'local') {

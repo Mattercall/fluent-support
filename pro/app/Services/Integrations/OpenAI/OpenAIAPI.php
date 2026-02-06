@@ -67,7 +67,7 @@ class OpenAIAPI
             return new \WP_Error(423, $error);
         }
 
-        $usedTokens = $body['usage']['total_tokens'] ?? 0;
+        $usedTokens = $body['usage']['total_tokens'];
 
         $responseBody = $body['choices'][0]['message']['content'] ?? '';
 

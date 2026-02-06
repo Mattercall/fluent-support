@@ -48,7 +48,7 @@ class TimeTrackController extends Controller
 
         if ($data['billable_minutes'] <= 0) {
             return $this->sendError([
-                'message' => __('Please provide valid hours and minutes', 'fluent-support-pro')
+                'message' => __('Please provide valid hours and minutes', 'fluent-boards-pro')
             ]);
         }
 
@@ -58,7 +58,7 @@ class TimeTrackController extends Controller
 
         return [
             'track' => $track,
-            'message' => __('You have successfully submitted your working time', 'fluent-support-pro')
+            'message' => __('You have successfully submitted your working time', 'fluent-boards-pro')
         ];
     }
 

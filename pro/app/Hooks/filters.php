@@ -87,6 +87,17 @@ $app->addFilter('fluent_support_app_vars', function ($vars) {
     return $vars;
 });
 
+add_filter('fluent_support/dashboard_notice', function ($messages) {
+    $licenseManager = new \FluentSupportPro\App\Services\PluginManager\LicenseManager();
+    $licenseMessage = $licenseManager->getLicenseMessages();
+
+    if ($licenseMessage) {
+        $html = '<div class="fs_box fs_dashboard_box"><div class="fs_box_header" style="background-color: #E8F0FF">License Activation</div><div class="fs_box_body" style="padding: 10px 30px;">' . $licenseMessage['message'] . '</div></div>';
+        $messages = $html . $messages;
+    }
+    return $messages;
+});
+
 add_filter('fluent_support/user_portal_access_config', function ($config) {
     $ticketFormConfig = \FluentSupportPro\App\Services\ProHelper::getTicketFormConfig();
     
@@ -106,15 +117,13 @@ add_filter('fluent_support/user_portal_access_config', function ($config) {
 $app->addFilter('fluent_support/countries', '\FluentSupport\App\Services\Includes\CountryNames@get');
 
 add_filter('fluent_support/dashboard_notice', function ($messages) {
-    if (version_compare(FLUENTSUPPORT_MIN_CORE_VERSION, FLUENT_SUPPORT_VERSION, '>')) {
+    if (
+        defined('FLUENTSUPPORT_MIN_CORE_VERSION') &&
+        defined('FLUENT_SUPPORT_VERSION') &&
+        version_compare(FLUENTSUPPORT_MIN_CORE_VERSION, FLUENT_SUPPORT_VERSION, '>')
+    ) {
         $updateUrl = admin_url('plugins.php?s=fluent-support&plugin_status=all');
-        $html = '<div class="fs_alert_notification fs_alert_warning" style="border-radius: 8px; margin-bottom: 24px; max-width: 1360px; margin-left: auto; margin-right: auto;">
-            <div style="display: flex; gap: 8px; align-items: center; padding: 8px 8px 8px 16px;">
-                <span style="font-size: 15px; line-height: 18px; flex-shrink: 0;">⚠️</span>
-                <p style="flex: 1; margin: 0; font-size: 14px; line-height: 20px; color: #0e121b; letter-spacing: -0.084px;">Fluent Support core plugin needs to be updated for compatibility.</p>
-                <a href="'.esc_url($updateUrl).'" style="color: var(--fs-text-primary, #0E121B);font-size: 14px;font-style: normal;font-weight: 500;line-height: 20px;letter-spacing: -0.084px;text-decoration-line: underline;text-decoration-style: solid;">Update Now</a>
-            </div>
-        </div>';
+        $html = '<div class="fs_box fs_dashboard_box"><div class="fs_box_header">Heads UP! Fluent Support plugin update</div><div class="fs_box_body" style="padding: 20px;">Fluent Support Plugin needs to be updated. <a href="'.esc_url($updateUrl).'">Click here to update the plugin</div></div>';
         $messages .= $html;
     }
     return $messages;

@@ -46,7 +46,7 @@ class TicketFormController extends Controller
         Helper::updateOption('_ticket_form_settings', $settings);
 
         return [
-            'message' => __('Settings have been updated', 'fluent-support-pro')
+            'message' => __('Settings has been updated', 'fluent-support-pro')
         ];
 
     }
@@ -80,22 +80,19 @@ class TicketFormController extends Controller
 
        asort($formattedRoles);
 
-        $fields = [];
-
-        $fields += [
+        $fields = [
             'enable_docs'       => [
-                'label'         => 'Knowledge Base Suggestion',
-                'type'          => 'inline-checkbox',
-                'checkbox_label'=> 'Enable knowledge base suggestion on ticket creation form',
-                'true_label'    => 'yes',
-                'false_label'   => 'no'
+                'type'           => 'inline-checkbox',
+                'checkbox_label' => 'Enable knowledge base suggestion on ticket creation form',
+                'true_label'     => 'yes',
+                'false_label'    => 'no'
             ],
             'docs_post_types'   => [
                 'type'          => 'checkbox-group',
-                'label'         => 'Knowledge Base Post Types',
+                'label'         => 'Knowledge Base post types',
                 'options'       => $postTypes,
                 'inline_help'   => 'Select the post types that you want to show articles from',
-                'wrapper_class' => '',
+                'wrapper_class' => 'fs_half_field',
                 'dependency'    => [
                     'depends_on' => 'enable_docs',
                     'operator'   => '=',
@@ -106,7 +103,7 @@ class TicketFormController extends Controller
                 'type'          => 'input-text',
                 'data_type'     => 'number',
                 'label'         => 'Suggested Articles Limit',
-                'wrapper_class' => '',
+                'wrapper_class' => 'fs_half_field',
                 'dependency'    => [
                     'depends_on' => 'enable_docs',
                     'operator'   => '=',
@@ -116,88 +113,83 @@ class TicketFormController extends Controller
             'disabled_fields'   => [
                 'type'          => 'checkbox-group',
                 'label'         => 'Disabled Default Fields',
-                'wrapper_class' => '',
+                'wrapper_class' => 'fs_half_field',
                 'options'       => [
                     'file_upload'      => 'File Upload',
                     'priority'         => 'Priority',
                     'product_services' => 'Product & Services'
                 ],
-                'inline_help'   => 'Checked fields will not be available on the ticket creation form',
-            ],
-            'product_required_field' => [
-                'label'          => 'Product & Service Field Requirement',
-                'type'           => 'inline-checkbox',
-                'checkbox_label' => 'Mark product and service fields as required.',
-                'true_label'     => 'yes',
-                'wrapper_class'  => '',
-                'false_label'    => 'no',
-                'dependency'     => [
-                    'depends_on' => 'disabled_fields',
-                    'operator'   => 'not_contains',
-                    'value'      => 'product_services'
-                ]
+                'inline_help'   => 'Checked fields will not be available on create ticket form',
             ],
             'disable_rich_text' => [
-                'label'          => 'Rich Text Editor Option',
                 'type'           => 'inline-checkbox',
                 'checkbox_label' => 'Disable Rich Text Editor for Frontend',
                 'true_label'     => 'yes',
-                'wrapper_class'  => '',
+                'wrapper_class'  => 'fs_half_field',
                 'false_label'    => 'no'
             ],
+            'product_required_field' => [
+                'type'           => 'inline-checkbox',
+                'checkbox_label' => 'Required fields for products and services.',
+                'true_label'     => 'yes',
+                'wrapper_class'  => 'fs_half_field',
+                'false_label'    => 'no',
+                'dependency'    => [
+                    'depends_on' => 'disabled_fields',
+                    'operator'   => 'not_contains',
+                    'value'      => 'product_services'
+                ],
+            ],
             'submitter_type' => [
-                'type'  => 'input-radio',
-                'label' => 'Who can access the customer portal?',
+                'type' => 'input-radio',
+                'label' => 'Who can access customer portal?',
                 'options' => [
                     [
-                        'id'    => 'logged_in_users',
-                        'label' => 'Any logged-in users'
+                        'id' => 'logged_in_users',
+                        'label' => 'Any logged in users'
                     ],
                     [
-                        'id'    => 'allowed_user_roles',
+                        'id' => 'allowed_user_roles',
                         'label' => 'Only selected user roles'
                     ]
                 ]
             ],
             'allowed_user_roles' => [
-                'type'          => 'checkbox-group',
-                'label'         => 'Select User Roles for Customer Portal',
-                'options'       => $formattedRoles,
+                'type' => 'checkbox-group',
+                'label' => 'Select Users Roles for Customer Portal',
+                'options' => $formattedRoles,
                 'dependency'    => [
                     'depends_on' => 'submitter_type',
                     'operator'   => '=',
                     'value'      => 'allowed_user_roles'
                 ]
+            ],
+            'field_labels'      => [
+                'label'        => 'Form Labels Customization',
+                'source_label' => 'Field',
+                'new_label'    => 'Input Label',
+                'type'         => 'object-tabular-input',
+                'options'      => [
+                    'subject'           => __('Subject heading', 'fluent-support-pro'),
+                    'ticket_details'    => __('Form content heading', 'fluent-support-pro'),
+                    'details_help'      => __('Content help message', 'fluent-support-pro'),
+                    'product_services'  => __('Product/Service heading', 'fluent-support-pro'),
+                    'priority'          => __('Priority heading', 'fluent-support-pro'),
+                    'btn_text'          => __('Create ticket button text', 'fluent-support-pro'),
+                    'submit_heading'    => __('Create ticket page heading', 'fluent-support-pro'),
+                    'create_ticket_cta' => __('Ticket Create Call to Action', 'fluent-support-pro')
+                ]
             ]
         ];
 
-// Add WooCommerce field before 'field_labels'
         if (defined('WC_PLUGIN_FILE')) {
             $fields['enable_woo_menu'] = [
                 'type'           => 'inline-checkbox',
-                'label'          => 'WooCommerce Support Navigation',
                 'checkbox_label' => 'Add support link to WooCommerce account navigation',
                 'true_label'     => 'yes',
                 'false_label'    => 'no'
             ];
         }
-
-        $fields['field_labels'] = [
-            'label'        => 'Form Labels Customization',
-            'source_label' => 'Field',
-            'new_label'    => 'Input Label',
-            'type'         => 'object-tabular-input',
-            'options'      => [
-                'subject'           => __('Subject heading', 'fluent-support-pro'),
-                'ticket_details'    => __('Form content heading', 'fluent-support-pro'),
-                'details_help'      => __('Content help message', 'fluent-support-pro'),
-                'product_services'  => __('Product/Service heading', 'fluent-support-pro'),
-                'priority'          => __('Priority heading', 'fluent-support-pro'),
-                'btn_text'          => __('Create ticket button text', 'fluent-support-pro'),
-                'submit_heading'    => __('Create ticket page heading', 'fluent-support-pro'),
-                'create_ticket_cta' => __('Ticket Create Call to Action', 'fluent-support-pro')
-            ]
-        ];
 
         return $fields;
     }

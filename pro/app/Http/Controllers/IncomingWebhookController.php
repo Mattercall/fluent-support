@@ -8,7 +8,6 @@ use FluentSupport\App\Models\Meta;
 use FluentSupport\App\Models\MailBox;
 use FluentSupport\App\Services\Helper;
 use FluentSupport\Framework\Request\Request;
-use FluentSupportPro\App\Services\ProHelper;
 
 class IncomingWebhookController extends Controller
 {
@@ -20,7 +19,7 @@ class IncomingWebhookController extends Controller
             //If webhook not found then create new webhook
             $webhook = $this->createWebhook();
         }
-        $webhookData = ProHelper::safeUnserialize($webhook->value);
+        $webhookData = Helper::safeUnserialize($webhook->value);
         //If webhook data is array then get webhook uri from array else get webhook uri from webhook data
         $webhook_uri = (is_array($webhookData) && isset($webhookData['webhook'])) ? $webhookData['webhook'] : $webhookData;
         //If webhook data is array then get mailbox id from array else get default mailbox id
@@ -64,7 +63,7 @@ class IncomingWebhookController extends Controller
         }else{
             $webhook = Meta::where('object_type', 'fs_incoming_webhook')->get()->first();
             $defaultMailBox = Helper::getDefaultMailBox();
-            $existingData = ProHelper::safeUnserialize($webhook->value);
+            $existingData = Helper::safeUnserialize($webhook->value);
             //If webhook data is array then get mailbox id from array else get default mailbox id
             $mailBox = (is_array($existingData) && isset($existingData['mailbox'])) ? $existingData['mailbox'] : $defaultMailBox->id;
             $token = wp_generate_uuid4();
@@ -88,7 +87,7 @@ class IncomingWebhookController extends Controller
     private function updateMailBox($mailboxId){
         $webhook = Meta::where('object_type', 'fs_incoming_webhook')->select(['value'])->get()->first();
         if($webhook){
-            $existingData = ProHelper::safeUnserialize($webhook->value);
+            $existingData = Helper::safeUnserialize($webhook->value);
             $webhook_uri = (is_array($existingData) && isset($existingData['webhook'])) ? $existingData['webhook'] : $existingData;
             $data = [
                 'webhook' => $webhook_uri,

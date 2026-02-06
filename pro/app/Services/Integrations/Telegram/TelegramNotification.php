@@ -20,8 +20,8 @@ class TelegramNotification extends NotificationIntegrationBase
         add_filter('fluent_support/integration_drivers', function ($drivers) {
             $drivers[] = [
                 'key'         => 'telegram_settings',
-                'title'       => __('Telegram', 'fluent-support-pro'),
-                'description' => __('Send Telegram notifications to Group, Channel or individual person inbox and reply from Telegram inbox', 'fluent-support-pro') . '<p><a class="fs_doc_link" href="https://fluentsupport.com/docs/managing-tickets-using-telegram/" rel="noopener" target="_blank">Please read the documentation before you get started</a></p>'
+                'title'       => 'Telegram',
+                'description' => __('Send Telegram notifications to Group, Channel or individual person inbox and reply from Telegram inbox', 'fluent-support-pro') . '<p><a href="https://fluentsupport.com/docs/managing-tickets-using-telegram/" rel="noopener" target="_blank">Please read the documentation before you get started</a></p>'
             ];
             return $drivers;
         }, 1, 1);
@@ -82,7 +82,7 @@ class TelegramNotification extends NotificationIntegrationBase
     public function getFields()
     {
         return [
-            'title'       => __('Telegram Notification Settings', 'fluent-support-pro'),
+            'title'       => 'Telegram Notification Settings',
             'fields'      => [
                 'bot_token'            => [
                     'type'        => 'input-text',
@@ -137,7 +137,7 @@ class TelegramNotification extends NotificationIntegrationBase
                 'reply_from_html'      => [
                     'type'          => 'html-viewer',
                     'wrapper_class' => 'fs_highlight',
-                    'html'          => __('Your support agents can easily reply from telegram by replying to telegram. </br>Please make sure support agent has telegram id set to the profile. <a class="fs_doc_link" href="https://fluentsupport.com/docs/managing-tickets-using-telegram" target="_blank">Learn More about this feature</a>', 'fluent-support-pro'),
+                    'html'          => __('Your support agents can easily reply from telegram by replying to telegram. </br>Please make sure support agent has telegram id set to the profile. <a href="https://fluentsupport.com/docs/managing-tickets-using-telegram" target="_blank">Learn More about this feature</a>', 'fluent-support-pro'),
                     'dependency'    => [
                         'depends_on' => 'reply_from_telegram',
                         'operator'   => '=',
@@ -169,18 +169,12 @@ class TelegramNotification extends NotificationIntegrationBase
             return $this->save($settings);
         }
 
-        $prevBotToken = Arr::get($prevSettings, 'bot_token', '');
-        if ($prevBotToken != $settings['bot_token'] || $settings['status'] == 'no' || $settings['reply_from_telegram'] == 'no') { // bot token changed
+        if ($prevSettings['bot_token'] != $settings['bot_token'] || $settings['status'] == 'no' || $settings['reply_from_telegram'] == 'no') { // bot token changed
             $response = $this->maybeRemoveWebhook($prevSettings);
             if (is_wp_error($response)) {
                 $settings['webhook_activated'] = 'yes';
             } else {
-                $isActive = false;
-                if (is_array($response) && isset($response['ok'])) {
-                    $isActive = $response['ok'];
-                } elseif (is_object($response) && isset($response->ok)) {
-                    $isActive = $response->ok;
-                }
+                $isActive = is_array($response) ? $response['ok'] : $response->ok;
                 $settings['webhook_activated'] = $isActive ? 'no' : 'yes';
             }
         }
@@ -190,12 +184,7 @@ class TelegramNotification extends NotificationIntegrationBase
             if (is_wp_error($response)) {
                 $settings['webhook_activated'] = 'no';
             } else {
-                $isActive = false;
-                if (is_array($response) && isset($response['ok'])) {
-                    $isActive = $response['ok'];
-                } elseif (is_object($response) && isset($response->ok)) {
-                    $isActive = $response->ok;
-                }
+                $isActive = is_array($response) ? $response['ok'] : $response->ok;
                 $settings['webhook_activated'] = $isActive ? 'yes' : 'no';
             }
         }

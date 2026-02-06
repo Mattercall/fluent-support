@@ -3,7 +3,7 @@
 namespace FluentSupportPro\App\Models;
 
 use FluentSupport\App\Models\Model;
-use FluentSupportPro\App\Services\ProHelper;
+use FluentSupport\App\Services\Helper;
 
 class WorkflowAction extends Model
 {
@@ -18,7 +18,7 @@ class WorkflowAction extends Model
 
     public function getSettingsAttribute($value)
     {
-        return ProHelper::safeUnserialize($this->attributes['settings']);
+        return Helper::safeUnserialize($this->attributes['settings']);
     }
 
 }

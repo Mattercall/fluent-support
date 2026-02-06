@@ -30,7 +30,7 @@ class DiscordController extends Controller
 		}
 
 		return [
-			'message' => __('Settings have been updated', 'fluent-support-pro'),
+			'message' => __('Settings has been updated', 'fluent-support-pro'),
 			'settings' => $settings
 		];
 	}

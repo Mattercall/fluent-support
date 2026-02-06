@@ -64,7 +64,7 @@ class AutoCloseController extends Controller
         AutoCloseService::saveSettings($settings);
 
         return [
-            'message'  => __('Settings have been updated', 'fluent-support-pro'),
+            'message'  => __('Settings has been updated', 'fluent-support-pro'),
             'settings' => AutoCloseService::getSettingsFields()
         ];
 
