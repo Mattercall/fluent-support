@@ -98,7 +98,7 @@ add_action('plugins_loaded', function () {
         'item_id'           => 7560869, // Product ID from FluentCart
         'settings_key'      => '__fluentsupport_pro_license',
         'plugin_title'      => 'FluentSupport Pro',
-        'basename'          => 'fluent-support-pro/fluent-support-pro.php', // Plugin basename (e.g., 'your-plugin/your-plugin.php')
+        'basename'          => 'fluent-support/fluent-support.php', // Plugin basename (e.g., 'your-plugin/your-plugin.php')
         'api_url'           => 'https://fluentapi.wpmanageninja.com/', // The API URL for license verification. Normally your store URL
         'store_url'         => 'https://wpmanageninja.com/', // Your store URL
         'purchase_url'      => 'https://fluentsupport.com/', // Purchase URL
